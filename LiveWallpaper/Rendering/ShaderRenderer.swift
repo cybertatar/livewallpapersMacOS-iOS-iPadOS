@@ -51,7 +51,15 @@ final class ImageSceneResources {
         }
         self.scene = scene
         self.image = image
-        self.cutout = scene.cutoutFile.flatMap { renderer.texture(for: imagesDirectory.appendingPathComponent($0)) }
+        // Вырез из старой версии мог не совпадать с повёрнутой картинкой — такой не используем.
+        let cutout = scene.cutoutFile.flatMap { renderer.texture(for: imagesDirectory.appendingPathComponent($0)) }
+        if let cutout {
+            let imageAspect = Double(image.width) / Double(image.height)
+            let cutoutAspect = Double(cutout.width) / Double(cutout.height)
+            self.cutout = abs(imageAspect / cutoutAspect - 1) < 0.02 ? cutout : nil
+        } else {
+            self.cutout = nil
+        }
     }
 }
 

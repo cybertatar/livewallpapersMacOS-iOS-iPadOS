@@ -19,13 +19,15 @@ enum SubjectLifter {
 
     /// Возвращает nil, если объект не найден.
     static func lift(imageAt url: URL, saveTo cutoutURL: URL) -> Result? {
+        guard let image = loadImage(url) else { return nil }
         // Картинка уже с прозрачным фоном — используем её как есть.
-        if let image = loadImage(url), hasTransparency(image) {
+        if hasTransparency(image) {
             guard writePNG(image, to: cutoutURL) else { return nil }
             return Result(cutoutURL: cutoutURL, focusX: alphaCenterX(image) ?? 0.5, sourceWasTransparent: true)
         }
 
-        let handler = VNImageRequestHandler(url: url)
+        // Уже повёрнутая по EXIF картинка — чтобы вырез совпадал с тем, что видно на экране.
+        let handler = VNImageRequestHandler(cgImage: image)
         let request = VNGenerateForegroundInstanceMaskRequest()
         do {
             try handler.perform([request])
@@ -44,9 +46,17 @@ enum SubjectLifter {
         }
     }
 
-    static func loadImage(_ url: URL) -> CGImage? {
+    /// Загружает картинку с учётом ориентации из EXIF (вертикальные фото с iPhone хранятся «лёжа»).
+    /// Слишком большие картинки уменьшаются до maxPixelSize по длинной стороне.
+    static func loadImage(_ url: URL, maxPixelSize: Int = 6144) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-        return CGImageSourceCreateImageAtIndex(source, 0, nil)
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
 
     static func writePNG(_ image: CGImage, to url: URL) -> Bool {
