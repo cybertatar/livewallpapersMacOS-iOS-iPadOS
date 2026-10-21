@@ -24,6 +24,9 @@ struct MenuBarView: View {
         }
         .pickerStyle(.menu)
 
+        Button("Следующие обои") { state.nextWallpaper() }
+        Toggle("Автосмена", isOn: $state.preferences.rotation.enabled)
+
         if state.preferences.motionMode == .settle {
             Button("Оживить обои") { state.reanimate() }
         }

@@ -1,11 +1,30 @@
 import Foundation
 
-/// Процедурные анимации, которые рисуются шейдерами Metal (см. Shaders.metal).
+/// Тематические подборки встроенных анимаций.
+enum ShaderCollection: String, Codable, CaseIterable, Identifiable {
+    case frieren, zelda, cyberpunk, anime, abstract
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .frieren: return "Фрирен"
+        case .zelda: return "Зельда"
+        case .cyberpunk: return "Киберпанк"
+        case .anime: return "Аниме"
+        case .abstract: return "Абстракция"
+        }
+    }
+}
+
+/// Процедурные анимации, которые рисуются шейдерами Metal (Rendering/Shaders/*.h).
+/// rawValue совпадает с именем сцены `scene_<rawValue>` и сохраняется в библиотеке — не переименовывать.
 enum ShaderKind: String, Codable, CaseIterable, Identifiable {
-    case aurora
-    case plasma
-    case waves
-    case starfield
+    case aurora, plasma, waves, starfield
+    case frierenFlowers, frierenSpell, frierenMeteor, frierenAutumn
+    case hyruleFields, skyIslands, ancientTech, lostWoods
+    case neonCity, synthwave, digitalRain, neonTunnel
+    case sakura, summerSky, fireflies, lanterns, oceanSunset
 
     var id: String { rawValue }
 
@@ -15,6 +34,33 @@ enum ShaderKind: String, Codable, CaseIterable, Identifiable {
         case .plasma: return "Плазма"
         case .waves: return "Волны"
         case .starfield: return "Звёзды"
+        case .frierenFlowers: return "Поле голубых цветов"
+        case .frierenSpell: return "Магический круг"
+        case .frierenMeteor: return "Звездопад"
+        case .frierenAutumn: return "Осенний путь"
+        case .hyruleFields: return "Поля Хайрула"
+        case .skyIslands: return "Небесные острова"
+        case .ancientTech: return "Древняя технология"
+        case .lostWoods: return "Затерянный лес"
+        case .neonCity: return "Неоновый город"
+        case .synthwave: return "Синтвейв"
+        case .digitalRain: return "Цифровой дождь"
+        case .neonTunnel: return "Неоновый тоннель"
+        case .sakura: return "Сакура"
+        case .summerSky: return "Летнее небо"
+        case .fireflies: return "Светлячки"
+        case .lanterns: return "Небесные фонарики"
+        case .oceanSunset: return "Закат у моря"
+        }
+    }
+
+    var collection: ShaderCollection {
+        switch self {
+        case .aurora, .plasma, .waves, .starfield: return .abstract
+        case .frierenFlowers, .frierenSpell, .frierenMeteor, .frierenAutumn: return .frieren
+        case .hyruleFields, .skyIslands, .ancientTech, .lostWoods: return .zelda
+        case .neonCity, .synthwave, .digitalRain, .neonTunnel: return .cyberpunk
+        case .sakura, .summerSky, .fireflies, .lanterns, .oceanSunset: return .anime
         }
     }
 

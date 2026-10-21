@@ -15,29 +15,41 @@
 		616E7A3B701C874DEF1D0BA0 /* WallpaperContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E599284A67142710CCBCA5A4 /* WallpaperContentView.swift */; };
 		6306E391B2FA7EC5DD6C123E /* LiveWallpaperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 820A4DCE524EA4D91F427527 /* LiveWallpaperApp.swift */; };
 		6C8CC185E8A9716A38D05B7A /* DesktopController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AE8887DCC5EE9A24BC4797 /* DesktopController.swift */; };
+		6FE70702EB7D22FA17183059 /* Playlist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40526BAEF3EE8E7594460E2C /* Playlist.swift */; };
 		71C0B517B83F8D4FF5E4CD6D /* WallpaperLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39925B682EC18BA1489B75E0 /* WallpaperLibrary.swift */; };
 		72ABE7BC9F94FD405248248D /* ShaderRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB995E7C1F86352180B70C9 /* ShaderRenderer.swift */; };
 		91D025D3BC49A0E0F8618861 /* Wallpaper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B6DE6411DACF19E4DFB603 /* Wallpaper.swift */; };
 		930A23D02489AFC733A62323 /* Snapshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89707728FE0CA30C9B03CC4E /* Snapshots.swift */; };
 		9F044C6C8A2A28FD35243723 /* PauseMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA10D9ACB0B88F66C8FAC1F6 /* PauseMonitor.swift */; };
+		A9029F0734F2693EE89B9D24 /* PlaylistsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC00449B9C656BCA9B458D59 /* PlaylistsView.swift */; };
 		BFA558103362DF4581D39A63 /* LivePhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49CB485B10998D61677F8230 /* LivePhotoView.swift */; };
 		C79AF3BF88CD093FF9016618 /* WallpaperWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905EF29BB0108E1CBEACCB06 /* WallpaperWindow.swift */; };
 		CFB384640E2080F4FD746D7C /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 970E7858893BCBCA5D9BA560 /* Shaders.metal */; };
 		DB03FAA153316E03292D4A9C /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B137D8502BE15A1F1DDA5AC8 /* MainView.swift */; };
+		DE06AB011B9DA5E657D43764 /* RotationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0665A7A3C049FC438013CD73 /* RotationController.swift */; };
 		E5B41BAE121902372E6F6F6B /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7122C62B54AAF31AA4AAA948 /* Preferences.swift */; };
+		E6465A1156CCC84954339FC5 /* AutoChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0F53E02BB772FE1167C87D /* AutoChangeView.swift */; };
 		F9849C744A331347881C477E /* DisplaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2E2B809DFAADB44DCF16F8 /* DisplaysView.swift */; };
 		FF8E0209D284D1B8BE4B3255 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF51E03F5A9E0B2B0BDE447 /* LibraryView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0665A7A3C049FC438013CD73 /* RotationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RotationController.swift; sourceTree = "<group>"; };
 		0E702C950E837747275E31DC /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		17D31D65B49FEDC87A15F426 /* Frieren.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Frieren.h; sourceTree = "<group>"; };
+		1A0F53E02BB772FE1167C87D /* AutoChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoChangeView.swift; sourceTree = "<group>"; };
 		2A661DE1C7EAFC346D320227 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		30411BA0A3B470275FCBD5AF /* Common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Common.h; sourceTree = "<group>"; };
 		34B6DE6411DACF19E4DFB603 /* Wallpaper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallpaper.swift; sourceTree = "<group>"; };
 		39925B682EC18BA1489B75E0 /* WallpaperLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLibrary.swift; sourceTree = "<group>"; };
+		3EB301B075E78B049987753B /* Abstract.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Abstract.h; sourceTree = "<group>"; };
+		40526BAEF3EE8E7594460E2C /* Playlist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Playlist.swift; sourceTree = "<group>"; };
 		49CB485B10998D61677F8230 /* LivePhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoView.swift; sourceTree = "<group>"; };
 		4DF51E03F5A9E0B2B0BDE447 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		525FADC3854A1B7E049F72E3 /* LivePhotoExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoExporter.swift; sourceTree = "<group>"; };
+		5309C30194D8A92AD8BC4E49 /* Cyberpunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Cyberpunk.h; sourceTree = "<group>"; };
 		5AB995E7C1F86352180B70C9 /* ShaderRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShaderRenderer.swift; sourceTree = "<group>"; };
+		5F975646D85471531E1E3BFA /* Zelda.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Zelda.h; sourceTree = "<group>"; };
 		7122C62B54AAF31AA4AAA948 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		820A4DCE524EA4D91F427527 /* LiveWallpaperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWallpaperApp.swift; sourceTree = "<group>"; };
 		89707728FE0CA30C9B03CC4E /* Snapshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshots.swift; sourceTree = "<group>"; };
@@ -49,8 +61,10 @@
 		B137D8502BE15A1F1DDA5AC8 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		BA10D9ACB0B88F66C8FAC1F6 /* PauseMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseMonitor.swift; sourceTree = "<group>"; };
 		C382490A3C34E5662871A52E /* ShaderVideoRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShaderVideoRenderer.swift; sourceTree = "<group>"; };
+		D0C8DE65290A67F8677349E2 /* Anime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Anime.h; sourceTree = "<group>"; };
 		D59687F127A3ADB15445FD21 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		E599284A67142710CCBCA5A4 /* WallpaperContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperContentView.swift; sourceTree = "<group>"; };
+		FC00449B9C656BCA9B458D59 /* PlaylistsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -66,6 +80,7 @@
 		6D454112549C23C273BA5507 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				40526BAEF3EE8E7594460E2C /* Playlist.swift */,
 				7122C62B54AAF31AA4AAA948 /* Preferences.swift */,
 				34B6DE6411DACF19E4DFB603 /* Wallpaper.swift */,
 				39925B682EC18BA1489B75E0 /* WallpaperLibrary.swift */,
@@ -103,6 +118,19 @@
 			);
 			sourceTree = "<group>";
 		};
+		C1687EB5F0BBEFBF917172AE /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				3EB301B075E78B049987753B /* Abstract.h */,
+				D0C8DE65290A67F8677349E2 /* Anime.h */,
+				30411BA0A3B470275FCBD5AF /* Common.h */,
+				5309C30194D8A92AD8BC4E49 /* Cyberpunk.h */,
+				17D31D65B49FEDC87A15F426 /* Frieren.h */,
+				5F975646D85471531E1E3BFA /* Zelda.h */,
+			);
+			path = Shaders;
+			sourceTree = "<group>";
+		};
 		CB45D3D6F0CF825874A500B2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -116,6 +144,7 @@
 			children = (
 				A5AE8887DCC5EE9A24BC4797 /* DesktopController.swift */,
 				BA10D9ACB0B88F66C8FAC1F6 /* PauseMonitor.swift */,
+				0665A7A3C049FC438013CD73 /* RotationController.swift */,
 				E599284A67142710CCBCA5A4 /* WallpaperContentView.swift */,
 				905EF29BB0108E1CBEACCB06 /* WallpaperWindow.swift */,
 			);
@@ -128,6 +157,7 @@
 				5AB995E7C1F86352180B70C9 /* ShaderRenderer.swift */,
 				970E7858893BCBCA5D9BA560 /* Shaders.metal */,
 				89707728FE0CA30C9B03CC4E /* Snapshots.swift */,
+				C1687EB5F0BBEFBF917172AE /* Shaders */,
 			);
 			path = Rendering;
 			sourceTree = "<group>";
@@ -135,11 +165,13 @@
 		FE2678C5952E825FF286426D /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				1A0F53E02BB772FE1167C87D /* AutoChangeView.swift */,
 				9F2E2B809DFAADB44DCF16F8 /* DisplaysView.swift */,
 				4DF51E03F5A9E0B2B0BDE447 /* LibraryView.swift */,
 				49CB485B10998D61677F8230 /* LivePhotoView.swift */,
 				B137D8502BE15A1F1DDA5AC8 /* MainView.swift */,
 				0E702C950E837747275E31DC /* MenuBarView.swift */,
+				FC00449B9C656BCA9B458D59 /* PlaylistsView.swift */,
 				2A661DE1C7EAFC346D320227 /* SettingsView.swift */,
 			);
 			path = UI;
@@ -204,6 +236,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B53FC619AF8A24453306BD2 /* AppState.swift in Sources */,
+				E6465A1156CCC84954339FC5 /* AutoChangeView.swift in Sources */,
 				6C8CC185E8A9716A38D05B7A /* DesktopController.swift in Sources */,
 				F9849C744A331347881C477E /* DisplaysView.swift in Sources */,
 				FF8E0209D284D1B8BE4B3255 /* LibraryView.swift in Sources */,
@@ -213,7 +246,10 @@
 				DB03FAA153316E03292D4A9C /* MainView.swift in Sources */,
 				4A3FF19AD75812EE6F5692BC /* MenuBarView.swift in Sources */,
 				9F044C6C8A2A28FD35243723 /* PauseMonitor.swift in Sources */,
+				6FE70702EB7D22FA17183059 /* Playlist.swift in Sources */,
+				A9029F0734F2693EE89B9D24 /* PlaylistsView.swift in Sources */,
 				E5B41BAE121902372E6F6F6B /* Preferences.swift in Sources */,
+				DE06AB011B9DA5E657D43764 /* RotationController.swift in Sources */,
 				0B32410EE5125D61E2D9B8B0 /* SettingsView.swift in Sources */,
 				72ABE7BC9F94FD405248248D /* ShaderRenderer.swift in Sources */,
 				4E0A0DFB6A4A3D067B168152 /* ShaderVideoRenderer.swift in Sources */,

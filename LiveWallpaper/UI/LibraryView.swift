@@ -8,13 +8,19 @@ struct LibraryView: View {
     @State private var selection: UUID?
     @State private var isImporting = false
     @State private var isDropTargeted = false
+    @State private var filter: PlaylistRef = .all
 
     private let columns = [GridItem(.adaptive(minimum: 190, maximum: 260), spacing: 14)]
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Видео и процедурные анимации").font(.headline)
+                Picker("Показать", selection: $filter) {
+                    ForEach(library.allRefs, id: \.self) { ref in
+                        Text("\(library.title(for: ref)) (\(library.items(in: ref).count))").tag(ref)
+                    }
+                }
+                .frame(maxWidth: 280)
                 Spacer()
                 Button {
                     isImporting = true
@@ -25,12 +31,18 @@ struct LibraryView: View {
             .padding(.bottom, 10)
 
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(library.items) { item in
-                        card(for: item)
+                if filter == .all {
+                    ForEach(sections, id: \.title) { section in
+                        Text(section.title)
+                            .font(.title3.weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 10)
+                            .padding(.horizontal, 6)
+                        grid(section.items)
                     }
+                } else {
+                    grid(library.items(in: filter))
                 }
-                .padding(4)
             }
             .overlay {
                 if isDropTargeted {
@@ -53,8 +65,28 @@ struct LibraryView: View {
         }
     }
 
+    private var sections: [(title: String, items: [WallpaperItem])] {
+        var result: [(title: String, items: [WallpaperItem])] = []
+        let videos = library.items(in: .videos)
+        if !videos.isEmpty { result.append((library.title(for: .videos), videos)) }
+        for collection in ShaderCollection.allCases {
+            let items = library.items(in: .collection(collection))
+            if !items.isEmpty { result.append((collection.title, items)) }
+        }
+        return result
+    }
+
+    private func grid(_ items: [WallpaperItem]) -> some View {
+        LazyVGrid(columns: columns, spacing: 14) {
+            ForEach(items) { item in
+                card(for: item)
+            }
+        }
+        .padding(4)
+    }
+
     private func card(for item: WallpaperItem) -> some View {
-        let isDefault = state.defaultItem == item
+        let isDefault = state.visibleItems.contains { $0.id == item.id }
         return VStack(alignment: .leading, spacing: 6) {
             ThumbnailView(item: item)
                 .overlay(alignment: .topTrailing) {
@@ -82,6 +114,18 @@ struct LibraryView: View {
         .onTapGesture { selection = item.id }
         .contextMenu {
             Button("Поставить на все мониторы") { state.applyToAllDisplays(item) }
+            Menu("Добавить в подборку") {
+                ForEach(library.playlists) { playlist in
+                    Toggle(playlist.name, isOn: Binding(
+                        get: { library.contains(item, inPlaylist: playlist.id) },
+                        set: { library.setItem(item, inPlaylist: playlist.id, included: $0) }
+                    ))
+                }
+                if !library.playlists.isEmpty { Divider() }
+                Button("Новая подборка") {
+                    library.createPlaylist(name: "Подборка \(library.playlists.count + 1)", itemIDs: [item.id])
+                }
+            }
             if item.isVideo {
                 Button("Удалить", role: .destructive) { library.remove(item) }
             }

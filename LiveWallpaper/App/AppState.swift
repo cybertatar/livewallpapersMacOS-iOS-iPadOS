@@ -9,12 +9,16 @@ final class AppState: ObservableObject {
     let library = WallpaperLibrary()
     let pauseMonitor = PauseMonitor()
     private(set) var desktop: DesktopController!
+    private(set) var rotation: RotationController!
 
     @Published var preferences: Preferences {
         didSet {
             guard preferences != oldValue else { return }
             preferences.save()
             desktop?.reload()
+            if preferences.rotation != oldValue.rotation {
+                rotation?.settingsChanged()
+            }
         }
     }
 
@@ -28,9 +32,13 @@ final class AppState: ObservableObject {
     private init() {
         preferences = Preferences.load()
         desktop = DesktopController(state: self)
+        rotation = RotationController(state: self)
         pauseMonitor.onChange = { [weak self] in self?.desktop.updatePause() }
         pauseMonitor.onBlock = { [weak self] in self?.desktop.freezeForLock() }
-        pauseMonitor.onUnblock = { [weak self] in self?.desktop.reanimate() }
+        pauseMonitor.onUnblock = { [weak self] in
+            self?.rotation.handleUnlock()
+            self?.desktop.reanimate()
+        }
         // Изменения в библиотеке (удаление, смена скорости) сразу применяются к обоям.
         library.objectWillChange
             .receive(on: RunLoop.main)
@@ -40,6 +48,12 @@ final class AppState: ObservableObject {
 
     func start() {
         desktop.reload()
+        rotation.settingsChanged()
+    }
+
+    /// Следующие обои (из подборки автосмены, если она включена).
+    func nextWallpaper() {
+        rotation.advance()
     }
 
     /// Обои по умолчанию для всех мониторов.

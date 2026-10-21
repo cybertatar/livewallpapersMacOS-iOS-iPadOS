@@ -4,7 +4,7 @@ struct MainView: View {
     static let windowID = "main"
 
     private enum Tab: Hashable {
-        case library, displays, livePhoto, settings
+        case library, playlists, autoChange, displays, livePhoto, settings
     }
 
     @State private var tab: Tab = .library
@@ -14,18 +14,24 @@ struct MainView: View {
             LibraryView()
                 .tabItem { Label("Библиотека", systemImage: "square.grid.2x2") }
                 .tag(Tab.library)
+            PlaylistsView()
+                .tabItem { Label("Подборки", systemImage: "rectangle.stack") }
+                .tag(Tab.playlists)
+            AutoChangeView()
+                .tabItem { Label("Автосмена", systemImage: "shuffle") }
+                .tag(Tab.autoChange)
             DisplaysView()
                 .tabItem { Label("Мониторы", systemImage: "display.2") }
                 .tag(Tab.displays)
             LivePhotoView()
-                .tabItem { Label("Live Photo для iPhone/iPad", systemImage: "livephoto") }
+                .tabItem { Label("Live Photo", systemImage: "livephoto") }
                 .tag(Tab.livePhoto)
             SettingsView()
                 .tabItem { Label("Настройки", systemImage: "gearshape") }
                 .tag(Tab.settings)
         }
         .padding()
-        .frame(minWidth: 760, minHeight: 520)
+        .frame(minWidth: 860, minHeight: 560)
     }
 }
 
