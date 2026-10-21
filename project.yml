@@ -1,4 +1,6 @@
-# Xcode-проект генерируется из этого файла: `xcodegen generate`
+# Из этого файла сгенерирован LiveWallpaper.xcodeproj.
+# После добавления/удаления файлов можно перегенерировать: `xcodegen generate`
+# (не обязательно — файлы можно добавлять и прямо в Xcode).
 name: LiveWallpaper
 options:
   bundleIdPrefix: com.cybertatar
@@ -15,6 +17,7 @@ targets:
   LiveWallpaper:
     type: application
     platform: macOS
+    scheme: {}
     sources:
       - path: LiveWallpaper
         excludes:

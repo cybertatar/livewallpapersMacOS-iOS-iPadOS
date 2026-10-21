@@ -7,13 +7,11 @@
 
 ## Сборка
 
-Нужны Xcode и [XcodeGen](https://github.com/yonaskolb/XcodeGen). Проект генерируется из `project.yml`, файл `.xcodeproj` в репозитории не хранится.
+Нужен только Xcode.
 
 ```bash
-brew install xcodegen
 git clone https://github.com/cybertatar/livewallpapersMacOS-iOS-iPadOS.git
 cd livewallpapersMacOS-iOS-iPadOS
-xcodegen generate
 open LiveWallpaper.xcodeproj
 ```
 
