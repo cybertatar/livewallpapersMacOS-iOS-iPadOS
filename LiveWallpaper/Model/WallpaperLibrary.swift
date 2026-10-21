@@ -9,20 +9,28 @@ final class WallpaperLibrary: ObservableObject {
 
     let baseDirectory: URL
     let videosDirectory: URL
+    let imagesDirectory: URL
     let snapshotsDirectory: URL
     let livePhotosDirectory: URL
 
     private var libraryFile: URL { baseDirectory.appendingPathComponent("library.json") }
     private var playlistsFile: URL { baseDirectory.appendingPathComponent("playlists.json") }
 
+    nonisolated static var baseURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("LiveWallpaper", isDirectory: true)
+    }
+
+    nonisolated static var imagesURL: URL { baseURL.appendingPathComponent("Images", isDirectory: true) }
+
     init() {
         let fm = FileManager.default
-        let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        baseDirectory = support.appendingPathComponent("LiveWallpaper", isDirectory: true)
+        baseDirectory = Self.baseURL
         videosDirectory = baseDirectory.appendingPathComponent("Videos", isDirectory: true)
+        imagesDirectory = baseDirectory.appendingPathComponent("Images", isDirectory: true)
         snapshotsDirectory = baseDirectory.appendingPathComponent("Snapshots", isDirectory: true)
         livePhotosDirectory = baseDirectory.appendingPathComponent("LivePhotos", isDirectory: true)
-        for dir in [videosDirectory, snapshotsDirectory, livePhotosDirectory] {
+        for dir in [videosDirectory, imagesDirectory, snapshotsDirectory, livePhotosDirectory] {
             try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         }
         load()
@@ -67,6 +75,52 @@ final class WallpaperLibrary: ObservableObject {
         return added
     }
 
+    /// Импорт картинок: копируем в библиотеку и вырезаем персонажа (Vision), это занимает пару секунд.
+    @discardableResult
+    func importImages(_ urls: [URL]) async -> [WallpaperItem] {
+        var added: [WallpaperItem] = []
+        let directory = imagesDirectory
+        for url in urls {
+            let base = UUID().uuidString
+            let ext = url.pathExtension.isEmpty ? "png" : url.pathExtension.lowercased()
+            let imageFile = "\(base).\(ext)"
+            let cutoutFile = "\(base)-cutout.png"
+            let lifted: SubjectLifter.Result?
+            do {
+                lifted = try await Task.detached(priority: .userInitiated) { () throws -> SubjectLifter.Result? in
+                    let scoped = url.startAccessingSecurityScopedResource()
+                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                    let destination = directory.appendingPathComponent(imageFile)
+                    try FileManager.default.copyItem(at: url, to: destination)
+                    return SubjectLifter.lift(imageAt: destination,
+                                              saveTo: directory.appendingPathComponent(cutoutFile))
+                }.value
+            } catch {
+                NSLog("LiveWallpaper: не удалось импортировать \(url.path): \(error)")
+                continue
+            }
+            var scene = ImageScene(imageFile: imageFile)
+            if let lifted {
+                scene.cutoutFile = cutoutFile
+                scene.focusX = lifted.focusX
+                // У картинки без фона своего фона нет — сразу ставим живую сцену.
+                if lifted.sourceWasTransparent {
+                    scene.backgroundScene = .frierenFlowers
+                }
+            }
+            let item = WallpaperItem(id: UUID(), name: url.deletingPathExtension().lastPathComponent,
+                                     source: .image(scene))
+            items.append(item)
+            added.append(item)
+        }
+        save()
+        return added
+    }
+
+    func imageURL(_ file: String) -> URL {
+        imagesDirectory.appendingPathComponent(file)
+    }
+
     func add(_ item: WallpaperItem) {
         items.append(item)
         save()
@@ -82,6 +136,10 @@ final class WallpaperLibrary: ObservableObject {
         if let url = fileURL(for: item) {
             try? FileManager.default.removeItem(at: url)
         }
+        if let scene = item.imageScene {
+            try? FileManager.default.removeItem(at: imageURL(scene.imageFile))
+            if let cutout = scene.cutoutFile { try? FileManager.default.removeItem(at: imageURL(cutout)) }
+        }
         items.removeAll { $0.id == item.id }
         for index in playlists.indices {
             playlists[index].itemIDs.removeAll { $0 == item.id }
@@ -94,7 +152,7 @@ final class WallpaperLibrary: ObservableObject {
 
     /// Все наборы, из которых можно выбирать: «все», видео, встроенные темы, свои подборки.
     var allRefs: [PlaylistRef] {
-        [.all, .videos] + ShaderCollection.allCases.map { .collection($0) } + playlists.map { .custom($0.id) }
+        [.all, .images, .videos] + ShaderCollection.allCases.map { .collection($0) } + playlists.map { .custom($0.id) }
     }
 
     func items(in ref: PlaylistRef) -> [WallpaperItem] {
@@ -103,6 +161,8 @@ final class WallpaperLibrary: ObservableObject {
             return items
         case .videos:
             return items.filter(\.isVideo)
+        case .images:
+            return items.filter(\.isImage)
         case .collection(let collection):
             return items.filter { $0.shaderKind?.collection == collection }
         case .custom(let id):
@@ -114,6 +174,7 @@ final class WallpaperLibrary: ObservableObject {
         switch ref {
         case .all: return "Все обои"
         case .videos: return "Мои видео"
+        case .images: return "Живые картинки"
         case .collection(let collection): return collection.title
         case .custom(let id): return playlist(id: id)?.name ?? "Удалённая подборка"
         }

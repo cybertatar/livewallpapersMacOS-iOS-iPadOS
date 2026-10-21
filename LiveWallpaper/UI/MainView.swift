@@ -54,7 +54,7 @@ struct ThumbnailView: View {
         }
         .aspectRatio(16 / 9, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .task(id: item.id) {
+        .task(id: "\(item.id)-\(item.source.hashValue)") {
             image = await Snapshots.thumbnail(for: item, videoURL: library.fileURL(for: item))
         }
     }

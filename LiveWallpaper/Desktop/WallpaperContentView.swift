@@ -16,6 +16,8 @@ class WallpaperContentView: NSView {
     func setMotion(_ motion: Double) {}
     /// Текущая позиция анимации: секунды видео или время шейдера.
     var frameTime: Double { 0 }
+    /// Применяет новые настройки «живой картинки». false — нужно пересоздать содержимое.
+    func updateImageScene(_ scene: ImageScene) -> Bool { false }
 }
 
 // MARK: - Видео
@@ -96,7 +98,7 @@ final class VideoWallpaperView: WallpaperContentView {
 final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
     private let renderer: ShaderRenderer
     private let mtkView: MTKView
-    private let kind: ShaderKind
+    private let content: SceneContent
     private var speed: Double
     private var scale: Double
     private var motion = 1.0
@@ -104,10 +106,10 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
     private var elapsed: Double
     private var lastTimestamp: CFTimeInterval?
 
-    init?(kind: ShaderKind, speed: Double, options: RenderOptions) {
+    init?(content: SceneContent, speed: Double, options: RenderOptions) {
         guard let renderer = ShaderRenderer.shared else { return nil }
         self.renderer = renderer
-        self.kind = kind
+        self.content = content
         self.speed = speed
         self.scale = options.shaderScale
         // Случайная стартовая точка, чтобы мониторы не показывали одинаковую картинку.
@@ -158,6 +160,15 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
 
     override var frameTime: Double { elapsed }
 
+    override func updateImageScene(_ scene: ImageScene) -> Bool {
+        guard case .image(let resources) = content,
+              resources.scene.imageFile == scene.imageFile,
+              resources.scene.cutoutFile == scene.cutoutFile else { return false }
+        resources.scene = scene
+        redrawIfStopped()
+        return true
+    }
+
     override func setPaused(_ paused: Bool) {
         isPausedExternally = paused
         updateRunning()
@@ -207,7 +218,7 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
         guard let pass = view.currentRenderPassDescriptor,
               let drawable = view.currentDrawable,
               let commandBuffer = renderer.commandQueue.makeCommandBuffer() else { return }
-        renderer.encode(kind: kind, time: elapsed, size: view.drawableSize,
+        renderer.encode(content, time: elapsed, size: view.drawableSize,
                         pass: pass, commandBuffer: commandBuffer)
         commandBuffer.present(drawable)
         commandBuffer.commit()

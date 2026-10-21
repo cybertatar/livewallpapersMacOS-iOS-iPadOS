@@ -49,6 +49,12 @@ final class WallpaperWindow: NSWindow {
             self.item = item
             return false
         }
+        // Поменялись только эффекты «живой картинки» — применяем без пересоздания.
+        if let content, let item, item.id == self.item?.id, let scene = item.imageScene,
+           content.updateImageScene(scene) {
+            self.item = item
+            return false
+        }
         content?.removeFromSuperview()
         content = nil
         self.item = item
@@ -63,8 +69,10 @@ final class WallpaperWindow: NSWindow {
             } else {
                 view = nil
             }
-        case .shader(let kind):
-            view = ShaderWallpaperView(kind: kind, speed: item.speed, options: options)
+        case .shader, .image:
+            view = SceneContent(item: item).flatMap {
+                ShaderWallpaperView(content: $0, speed: item.speed, options: options)
+            }
         }
         guard let view else { return true }
         view.frame = contentView.bounds

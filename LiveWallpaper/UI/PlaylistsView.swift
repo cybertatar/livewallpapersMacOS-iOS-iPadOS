@@ -10,7 +10,7 @@ struct PlaylistsView: View {
         HStack(spacing: 0) {
             List(selection: $selection) {
                 Section("Встроенные") {
-                    ForEach([PlaylistRef.all, .videos] + ShaderCollection.allCases.map { .collection($0) }, id: \.self) { ref in
+                    ForEach([PlaylistRef.all, .images, .videos] + ShaderCollection.allCases.map { .collection($0) }, id: \.self) { ref in
                         row(ref)
                     }
                 }

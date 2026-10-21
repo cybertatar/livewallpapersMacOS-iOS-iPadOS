@@ -9,6 +9,7 @@ struct LibraryView: View {
     @State private var isImporting = false
     @State private var isDropTargeted = false
     @State private var filter: PlaylistRef = .all
+    @State private var importingCount = 0
 
     private let columns = [GridItem(.adaptive(minimum: 190, maximum: 260), spacing: 14)]
 
@@ -22,10 +23,14 @@ struct LibraryView: View {
                 }
                 .frame(maxWidth: 280)
                 Spacer()
+                if importingCount > 0 {
+                    ProgressView().controlSize(.small)
+                    Text("Вырезаю персонажа…").font(.callout).foregroundStyle(.secondary)
+                }
                 Button {
                     isImporting = true
                 } label: {
-                    Label("Добавить видео…", systemImage: "plus")
+                    Label("Добавить видео или картинку…", systemImage: "plus")
                 }
             }
             .padding(.bottom, 10)
@@ -50,17 +55,17 @@ struct LibraryView: View {
                         .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 3, dash: [8]))
                 }
             }
-            .onDrop(of: [.movie], isTargeted: $isDropTargeted, perform: handleDrop)
+            .onDrop(of: [.movie, .image], isTargeted: $isDropTargeted, perform: handleDrop)
 
             if let item = library.item(id: selection) {
                 Divider().padding(.vertical, 8)
                 ItemInspector(item: item) { selection = nil }
             }
         }
-        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.movie],
+        .fileImporter(isPresented: $isImporting, allowedContentTypes: [.movie, .image],
                       allowsMultipleSelection: true) { result in
             if case .success(let urls) = result {
-                Task { await library.importVideos(urls) }
+                Task { await importFiles(urls) }
             }
         }
     }
@@ -68,6 +73,8 @@ struct LibraryView: View {
     private var sections: [(title: String, items: [WallpaperItem])] {
         var result: [(title: String, items: [WallpaperItem])] = []
         let videos = library.items(in: .videos)
+        let images = library.items(in: .images)
+        if !images.isEmpty { result.append((library.title(for: .images), images)) }
         if !videos.isEmpty { result.append((library.title(for: .videos), videos)) }
         for collection in ShaderCollection.allCases {
             let items = library.items(in: .collection(collection))
@@ -98,7 +105,7 @@ struct LibraryView: View {
                     }
                 }
             HStack {
-                Image(systemName: item.isVideo ? "film" : "wand.and.stars")
+                Image(systemName: item.isVideo ? "film" : item.isImage ? "person.crop.rectangle" : "wand.and.stars")
                     .foregroundStyle(.secondary)
                 Text(item.name).lineLimit(1)
             }
@@ -130,23 +137,37 @@ struct LibraryView: View {
                     library.createPlaylist(name: "Подборка \(library.playlists.count + 1)", itemIDs: [item.id])
                 }
             }
-            if item.isVideo {
+            if item.isVideo || item.isImage {
                 Button("Удалить", role: .destructive) { library.remove(item) }
             }
         }
     }
 
+    /// Видео и картинки раскладываем по своим импортёрам.
+    private func importFiles(_ urls: [URL]) async {
+        let images = urls.filter { UTType(filenameExtension: $0.pathExtension)?.conforms(to: .image) == true }
+        let videos = urls.filter { !images.contains($0) }
+        if !videos.isEmpty { await library.importVideos(videos) }
+        if !images.isEmpty {
+            importingCount += images.count
+            let added = await library.importImages(images)
+            importingCount -= images.count
+            if let first = added.first { selection = first.id }
+        }
+    }
+
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
         for provider in providers {
-            _ = provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
+            let type: UTType = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) ? .movie : .image
+            _ = provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { url, _ in
                 guard let url else { return }
                 // Временный файл удаляется после выхода из колбэка — копируем сразу.
                 let copy = FileManager.default.temporaryDirectory
-                    .appendingPathComponent(UUID().uuidString)
+                    .appendingPathComponent(url.deletingPathExtension().lastPathComponent + "-" + UUID().uuidString.prefix(4))
                     .appendingPathExtension(url.pathExtension)
                 guard (try? FileManager.default.copyItem(at: url, to: copy)) != nil else { return }
                 Task { @MainActor in
-                    await library.importVideos([copy])
+                    await importFiles([copy])
                     try? FileManager.default.removeItem(at: copy)
                 }
             }
@@ -164,28 +185,33 @@ private struct ItemInspector: View {
     @State private var name = ""
 
     var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            TextField("Название", text: $name)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 220)
-                .onSubmit(save)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 16) {
+                TextField("Название", text: $name)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 220)
+                    .onSubmit(save)
 
-            SpeedControl(item: item)
-                .frame(width: 280)
+                SpeedControl(item: item)
+                    .frame(width: 280)
 
-            Spacer()
+                Spacer()
 
-            Button("На все мониторы") {
-                save()
-                if let updated = library.item(id: item.id) { state.applyToAllDisplays(updated) }
-            }
-            .buttonStyle(.borderedProminent)
-
-            if item.isVideo {
-                Button("Удалить", role: .destructive) {
-                    library.remove(item)
-                    onClose()
+                Button("На все мониторы") {
+                    save()
+                    if let updated = library.item(id: item.id) { state.applyToAllDisplays(updated) }
                 }
+                .buttonStyle(.borderedProminent)
+
+                if item.isVideo || item.isImage {
+                    Button("Удалить", role: .destructive) {
+                        library.remove(item)
+                        onClose()
+                    }
+                }
+            }
+            if item.isImage {
+                ImageSceneEditor(item: item)
             }
         }
         .onAppear(perform: syncFromItem)

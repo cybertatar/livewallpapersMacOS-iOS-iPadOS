@@ -11,6 +11,7 @@ struct Playlist: Identifiable, Codable, Hashable {
 enum PlaylistRef: Codable, Hashable {
     case all
     case videos
+    case images
     case collection(ShaderCollection)
     case custom(UUID)
 }

@@ -43,7 +43,7 @@ struct LivePhotoView: View {
                     Section {
                         Picker("Источник", selection: $state.livePhotoSourceID) {
                             Text("Выберите обои").tag(UUID?.none)
-                            ForEach([PlaylistRef.videos] + ShaderCollection.allCases.map { .collection($0) }, id: \.self) { ref in
+                            ForEach([PlaylistRef.images, .videos] + ShaderCollection.allCases.map { .collection($0) }, id: \.self) { ref in
                                 let items = library.items(in: ref)
                                 if !items.isEmpty {
                                     Section(library.title(for: ref)) {
@@ -178,10 +178,10 @@ struct LivePhotoView: View {
             guard let url = library.fileURL(for: source) else { return }
             image = await Snapshots.videoFrame(url: url, at: start + duration * stillPosition,
                                                maxSize: CGSize(width: 1600, height: 1600))
-        case .shader(let kind):
+        case .shader, .image:
             let size = CGSize(width: preset.size.width / 4, height: preset.size.height / 4)
             let time = Self.shaderStartTime + duration * stillPosition * source.speed
-            image = await Task.detached { Snapshots.shaderFrame(kind: kind, time: time, size: size) }.value
+            image = await Task.detached { Snapshots.sceneFrame(item: source, time: time, size: size) }.value
         }
         guard !Task.isCancelled else { return }
         preview = image.map { NSImage(cgImage: $0, size: NSSize(width: $0.width, height: $0.height)) }
@@ -206,12 +206,12 @@ struct LivePhotoView: View {
             case .video:
                 guard let url = library.fileURL(for: source) else { return }
                 sourceURL = url
-            case .shader(let kind):
+            case .shader, .image:
                 status = .working("Рендер анимации…", 0)
                 let url = fm.temporaryDirectory.appendingPathComponent("shader-\(UUID().uuidString).mov")
                 temporaryVideo = url
                 try await ShaderVideoRenderer.render(
-                    kind: kind, speed: source.speed, startTime: Self.shaderStartTime,
+                    item: source, speed: source.speed, startTime: Self.shaderStartTime,
                     duration: duration, size: preset.size, to: url,
                     progress: { value in
                         Task { @MainActor in status = .working("Рендер анимации…", value) }

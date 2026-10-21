@@ -8,8 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		0B32410EE5125D61E2D9B8B0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A661DE1C7EAFC346D320227 /* SettingsView.swift */; };
+		0C06645595166D02176C5C61 /* ImageSceneEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E6D118EAA03FC80111B09C /* ImageSceneEditor.swift */; };
 		0C207B61A00E3F2086FABDB8 /* LivePhotoExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525FADC3854A1B7E049F72E3 /* LivePhotoExporter.swift */; };
 		2B53FC619AF8A24453306BD2 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59687F127A3ADB15445FD21 /* AppState.swift */; };
+		3E26905F950E7EA483B4BA34 /* SubjectLifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9029BAC5A8624C8BC043613 /* SubjectLifter.swift */; };
 		4A3FF19AD75812EE6F5692BC /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E702C950E837747275E31DC /* MenuBarView.swift */; };
 		4E0A0DFB6A4A3D067B168152 /* ShaderVideoRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C382490A3C34E5662871A52E /* ShaderVideoRenderer.swift */; };
 		616E7A3B701C874DEF1D0BA0 /* WallpaperContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E599284A67142710CCBCA5A4 /* WallpaperContentView.swift */; };
@@ -40,10 +42,12 @@
 		1A0F53E02BB772FE1167C87D /* AutoChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoChangeView.swift; sourceTree = "<group>"; };
 		2A661DE1C7EAFC346D320227 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		30411BA0A3B470275FCBD5AF /* Common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Common.h; sourceTree = "<group>"; };
+		32E6D118EAA03FC80111B09C /* ImageSceneEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSceneEditor.swift; sourceTree = "<group>"; };
 		34B6DE6411DACF19E4DFB603 /* Wallpaper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallpaper.swift; sourceTree = "<group>"; };
 		39925B682EC18BA1489B75E0 /* WallpaperLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLibrary.swift; sourceTree = "<group>"; };
 		3EB301B075E78B049987753B /* Abstract.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Abstract.h; sourceTree = "<group>"; };
 		40526BAEF3EE8E7594460E2C /* Playlist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Playlist.swift; sourceTree = "<group>"; };
+		454A1F7FA68C89E3D1180BDA /* ImageScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ImageScene.h; sourceTree = "<group>"; };
 		49CB485B10998D61677F8230 /* LivePhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoView.swift; sourceTree = "<group>"; };
 		4DF51E03F5A9E0B2B0BDE447 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		525FADC3854A1B7E049F72E3 /* LivePhotoExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoExporter.swift; sourceTree = "<group>"; };
@@ -63,6 +67,7 @@
 		C382490A3C34E5662871A52E /* ShaderVideoRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShaderVideoRenderer.swift; sourceTree = "<group>"; };
 		D0C8DE65290A67F8677349E2 /* Anime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Anime.h; sourceTree = "<group>"; };
 		D59687F127A3ADB15445FD21 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		D9029BAC5A8624C8BC043613 /* SubjectLifter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectLifter.swift; sourceTree = "<group>"; };
 		E599284A67142710CCBCA5A4 /* WallpaperContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperContentView.swift; sourceTree = "<group>"; };
 		FC00449B9C656BCA9B458D59 /* PlaylistsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -82,6 +87,7 @@
 			children = (
 				40526BAEF3EE8E7594460E2C /* Playlist.swift */,
 				7122C62B54AAF31AA4AAA948 /* Preferences.swift */,
+				D9029BAC5A8624C8BC043613 /* SubjectLifter.swift */,
 				34B6DE6411DACF19E4DFB603 /* Wallpaper.swift */,
 				39925B682EC18BA1489B75E0 /* WallpaperLibrary.swift */,
 			);
@@ -126,6 +132,7 @@
 				30411BA0A3B470275FCBD5AF /* Common.h */,
 				5309C30194D8A92AD8BC4E49 /* Cyberpunk.h */,
 				17D31D65B49FEDC87A15F426 /* Frieren.h */,
+				454A1F7FA68C89E3D1180BDA /* ImageScene.h */,
 				5F975646D85471531E1E3BFA /* Zelda.h */,
 			);
 			path = Shaders;
@@ -167,6 +174,7 @@
 			children = (
 				1A0F53E02BB772FE1167C87D /* AutoChangeView.swift */,
 				9F2E2B809DFAADB44DCF16F8 /* DisplaysView.swift */,
+				32E6D118EAA03FC80111B09C /* ImageSceneEditor.swift */,
 				4DF51E03F5A9E0B2B0BDE447 /* LibraryView.swift */,
 				49CB485B10998D61677F8230 /* LivePhotoView.swift */,
 				B137D8502BE15A1F1DDA5AC8 /* MainView.swift */,
@@ -239,6 +247,7 @@
 				E6465A1156CCC84954339FC5 /* AutoChangeView.swift in Sources */,
 				6C8CC185E8A9716A38D05B7A /* DesktopController.swift in Sources */,
 				F9849C744A331347881C477E /* DisplaysView.swift in Sources */,
+				0C06645595166D02176C5C61 /* ImageSceneEditor.swift in Sources */,
 				FF8E0209D284D1B8BE4B3255 /* LibraryView.swift in Sources */,
 				0C207B61A00E3F2086FABDB8 /* LivePhotoExporter.swift in Sources */,
 				BFA558103362DF4581D39A63 /* LivePhotoView.swift in Sources */,
@@ -255,6 +264,7 @@
 				4E0A0DFB6A4A3D067B168152 /* ShaderVideoRenderer.swift in Sources */,
 				CFB384640E2080F4FD746D7C /* Shaders.metal in Sources */,
 				930A23D02489AFC733A62323 /* Snapshots.swift in Sources */,
+				3E26905F950E7EA483B4BA34 /* SubjectLifter.swift in Sources */,
 				91D025D3BC49A0E0F8618861 /* Wallpaper.swift in Sources */,
 				616E7A3B701C874DEF1D0BA0 /* WallpaperContentView.swift in Sources */,
 				71C0B517B83F8D4FF5E4CD6D /* WallpaperLibrary.swift in Sources */,

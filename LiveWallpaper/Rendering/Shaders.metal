@@ -9,6 +9,13 @@ using namespace metal;
 #include "Shaders/Cyberpunk.h"
 #include "Shaders/Anime.h"
 
+// «Живая картинка»: текстуры передаются как параметры функции.
+#define TEX_PARAMS , texture2d<float> bgTex, texture2d<float> cutTex, sampler smp
+#define TEX_ARGS , bgTex, cutTex, smp
+#define SAMPLE_BG(uv, lod) bgTex.sample(smp, uv, level(lod))
+#define SAMPLE_CUT(uv, lod) cutTex.sample(smp, uv, level(lod))
+#include "Shaders/ImageScene.h"
+
 // Должна совпадать с ShaderUniforms в ShaderRenderer.swift.
 struct Uniforms {
     float2 resolution;
@@ -62,3 +69,27 @@ SCENE(summerSky)
 SCENE(fireflies)
 SCENE(lanterns)
 SCENE(oceanSunset)
+
+// Должна совпадать с ImageUniforms в ShaderRenderer.swift.
+struct ImageUniforms {
+    float2 resolution;
+    float time;
+    float flags;
+    float2 imageSize;
+    float particles;
+    float characterScale;
+    float4 glow;
+    float4 extra;
+};
+
+fragment float4 fragment_imageScene(VertexOut in [[stage_in]],
+                                    constant ImageUniforms &u [[buffer(0)]],
+                                    texture2d<float> bgTex [[texture(0)]],
+                                    texture2d<float> cutTex [[texture(1)]],
+                                    sampler smp [[sampler(0)]]) {
+    float2 fc = float2(in.position.x, u.resolution.y - in.position.y);
+    float3 c = imageScene(fc, u.resolution, u.time, u.imageSize, u.flags, u.particles,
+                          u.characterScale, u.glow.rgb, u.extra.x TEX_ARGS);
+    c += (hash21(fc + fract(u.time) * 100.0) - 0.5) / 255.0;
+    return float4(c, 1.0);
+}

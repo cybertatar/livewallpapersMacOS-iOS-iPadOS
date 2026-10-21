@@ -10,7 +10,7 @@ enum Snapshots {
 
     @MainActor
     static func thumbnail(for item: WallpaperItem, videoURL: URL?) async -> NSImage? {
-        let key = item.id.uuidString as NSString
+        let key = "\(item.id.uuidString)-\(item.source.hashValue)" as NSString
         if let cached = cache.object(forKey: key) { return cached }
         guard let cgImage = await cgImage(for: item, videoURL: videoURL,
                                           size: CGSize(width: 480, height: 270)) else { return nil }
@@ -24,9 +24,9 @@ enum Snapshots {
         case .video:
             guard let videoURL else { return nil }
             return await videoFrame(url: videoURL, at: 1.0, maxSize: size)
-        case .shader(let kind):
+        case .shader, .image:
             return await Task.detached(priority: .utility) {
-                Snapshots.shaderFrame(kind: kind, time: 20, size: size)
+                Snapshots.sceneFrame(item: item, time: 20, size: size)
             }.value
         }
     }
@@ -50,10 +50,16 @@ enum Snapshots {
         return try? await generator.image(at: CMTime(seconds: seconds, preferredTimescale: 600)).image
     }
 
-    static func shaderFrame(kind: ShaderKind, time: Double, size: CGSize) -> CGImage? {
+    /// Кадр шейдера или «живой картинки».
+    static func sceneFrame(item: WallpaperItem, time: Double, size: CGSize) -> CGImage? {
+        guard let content = SceneContent(item: item) else { return nil }
+        return sceneFrame(content, time: time, size: size)
+    }
+
+    static func sceneFrame(_ content: SceneContent, time: Double, size: CGSize) -> CGImage? {
         guard let renderer = ShaderRenderer.shared,
               let buffer = ShaderRenderer.makePixelBuffer(width: Int(size.width), height: Int(size.height)),
-              (try? renderer.render(kind: kind, time: time, into: buffer)) != nil else { return nil }
+              (try? renderer.render(content, time: time, into: buffer)) != nil else { return nil }
         let image = CIImage(cvPixelBuffer: buffer)
         return ciContext.createCGImage(image, from: image.extent)
     }

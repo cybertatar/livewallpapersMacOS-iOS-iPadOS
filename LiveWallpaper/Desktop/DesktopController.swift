@@ -196,9 +196,9 @@ final class DesktopController: NSObject {
                 case .video:
                     guard let videoURL else { return }
                     image = await Snapshots.exactVideoFrame(url: videoURL, at: time)
-                case .shader(let kind):
+                case .shader, .image:
                     image = await Task.detached(priority: .userInitiated) {
-                        Snapshots.shaderFrame(kind: kind, time: time, size: size)
+                        Snapshots.sceneFrame(item: item, time: time, size: size)
                     }.value
                 }
                 guard let image else { return }

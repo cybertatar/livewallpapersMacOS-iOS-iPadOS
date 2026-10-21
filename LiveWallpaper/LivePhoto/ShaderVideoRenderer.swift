@@ -2,10 +2,11 @@ import AVFoundation
 
 /// Рендерит процедурные обои в видеофайл (нужно, чтобы сделать из них Live Photo).
 enum ShaderVideoRenderer {
-    static func render(kind: ShaderKind, speed: Double, startTime: Double, duration: Double,
+    static func render(item: WallpaperItem, speed: Double, startTime: Double, duration: Double,
                        size: CGSize, fps: Int = 30, to url: URL,
                        progress: ((Double) -> Void)? = nil) async throws {
         guard let renderer = ShaderRenderer.shared else { throw ShaderRenderError.metalUnavailable }
+        guard let content = SceneContent(item: item) else { throw ShaderRenderError.imageUnavailable }
         let width = Int(size.width)
         let height = Int(size.height)
 
@@ -42,7 +43,7 @@ enum ShaderVideoRenderer {
                 throw ShaderRenderError.textureCreationFailed
             }
             let time = startTime + Double(frame) / Double(fps) * speed
-            try renderer.render(kind: kind, time: time, into: pixelBuffer)
+            try renderer.render(content, time: time, into: pixelBuffer)
             let presentationTime = CMTime(value: CMTimeValue(frame), timescale: CMTimeScale(fps))
             guard adaptor.append(pixelBuffer, withPresentationTime: presentationTime) else {
                 throw LivePhotoError.writeFailed(writer.error?.localizedDescription ?? "кадр \(frame)")
