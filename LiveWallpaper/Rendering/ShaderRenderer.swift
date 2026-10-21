@@ -19,7 +19,7 @@ struct ImageUniforms {
     var particles: Float
     var characterScale: Float
     var glow: SIMD4<Float>
-    var extra: SIMD4<Float>       // x — focusX
+    var extra: SIMD4<Float>       // x — focusX, y — плотность частиц
 }
 
 enum ShaderRenderError: LocalizedError {
@@ -183,7 +183,8 @@ final class ShaderRenderer {
         var background = resources.image
 
         // Фон — живая сцена: сначала рисуем её в промежуточную текстуру.
-        if let kind = scene.backgroundScene, let offscreen = offscreenTexture(for: resources, size: size) {
+        if resources.cutout != nil, let kind = scene.backgroundScene,
+           let offscreen = offscreenTexture(for: resources, size: size) {
             let bgPass = MTLRenderPassDescriptor()
             bgPass.colorAttachments[0].texture = offscreen
             bgPass.colorAttachments[0].loadAction = .dontCare
@@ -195,13 +196,19 @@ final class ShaderRenderer {
         guard let pipeline = imagePipeline,
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
 
+        let hasCutout = resources.cutout != nil
+        let liveBackground = hasCutout ? scene.backgroundScene : nil
         var flags: Float = 0
         if scene.kenBurns { flags += 1 }
-        if scene.floating { flags += 2 }
         if scene.lightRays { flags += 4 }
-        if resources.cutout != nil { flags += 8 }
-        if scene.backgroundScene != nil { flags += 16 }
-        if scene.aura != nil { flags += 32 }
+        if hasCutout && scene.separateCharacter { flags += 8 }
+        if liveBackground != nil { flags += 16 }
+        if hasCutout && scene.aura != nil { flags += 32 }
+        switch scene.fit {
+        case .auto: break
+        case .whole: flags += 64
+        case .fill: flags += 128
+        }
         let glow = scene.aura?.rgb ?? SIMD3(0, 0, 0)
 
         var uniforms = ImageUniforms(
@@ -212,7 +219,7 @@ final class ShaderRenderer {
             particles: Float(scene.particles.rawValue),
             characterScale: Float(scene.characterScale),
             glow: SIMD4(glow, 1),
-            extra: SIMD4(Float(scene.focusX), 0, 0, 0)
+            extra: SIMD4(Float(scene.focusX), Float(scene.particleAmount), 0, 0)
         )
         encoder.setRenderPipelineState(pipeline)
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<ImageUniforms>.stride, index: 0)

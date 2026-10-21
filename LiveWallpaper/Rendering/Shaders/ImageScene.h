@@ -1,139 +1,165 @@
-// «Живая картинка»: изображение пользователя (и вырезанный с него персонаж) с эффектами.
+// «Живая картинка»: изображение пользователя с аккуратными эффектами.
 //
 // Доступ к текстурам — через макросы, которые по-разному определены в Metal и GLSL:
 // TEX_PARAMS / TEX_ARGS — дописываются к параметрам функции, SAMPLE_BG / SAMPLE_CUT(uv, lod) — выборка.
 // Текстуры: bg — исходная картинка или кадр живой сцены-фона, cut — персонаж с альфой (premultiplied).
 // UV текстур — от левого верхнего угла.
+//
+// Принципы: картинка не искажается и не двигается относительно персонажа (никаких двойных контуров),
+// движение очень медленное и плавное, эффекты по умолчанию выключены.
 
-// Флаги (битовая маска во float).
 #define IMG_KEN_BURNS 1.0
-#define IMG_FLOAT 2.0
 #define IMG_RAYS 4.0
-#define IMG_HAS_CUTOUT 8.0
+#define IMG_SEPARATE 8.0      // персонаж отделён: частицы проходят между ним и фоном
 #define IMG_BG_SHADER 16.0
 #define IMG_AURA 32.0
+#define IMG_FIT_WHOLE 64.0
+#define IMG_FIT_FILL 128.0
 
 float flagBit(float flags, float bit) { return wrap(floor(flags / bit + 0.001), 2.0); }
 
-// Частицы: 0 нет, 1 лепестки, 2 листья, 3 снег, 4 светлячки, 5 магические искры, 6 дождь, 7 звёзды.
-// Возвращает premultiplied цвет и альфу; layer 0 — позади персонажа, 1 — впереди.
-float4 particleLayer(float2 p, float t, float type, float layer) {
+/// Мягкая круглая частица (боке) с центром в ячейке.
+float softDot(float2 local, float2 center, float radius) {
+    return 1.0 - smoothstep(radius * 0.35, radius, length(local - center));
+}
+
+// Частицы: 0 нет, 1 лепестки, 2 листья, 3 снег, 4 светлячки, 5 искры, 6 дождь, 7 звёзды.
+// amount — плотность (0…1). layer 0 — дальний слой (мельче, медленнее), 1 — ближний.
+// Возвращает premultiplied цвет и альфу.
+float4 particleLayer(float2 p, float t, float type, float layer, float amount) {
     float L = layer;
-    if (type < 0.5) { return float4(0.0); }
+    if (type < 0.5 || amount <= 0.0) { return float4(0.0); }
+    float dens = amount * mix(1.0, 0.45, L);
     if (type < 1.5) {
-        float m = fallingParticles(p + L * 7.3, t, mix(0.05, 0.11, L), mix(0.03, 0.06, L), 0.3, 0.2, mix(0.22, 0.10, L));
-        float a = m * mix(0.65, 0.95, L);
-        return float4(float3(1.0, 0.74, 0.84) * a, a);
+        float m = fallingParticles(p + L * 7.3, t, mix(0.065, 0.11, L), mix(0.012, 0.022, L), 0.25, 0.17, 0.12 * dens);
+        float a = m * mix(0.55, 0.8, L);
+        return float4(float3(1.0, 0.80, 0.87) * a, a);
     }
     if (type < 2.5) {
-        float m = fallingParticles(p + L * 4.1, t, mix(0.06, 0.12, L), mix(0.03, 0.06, L), 0.35, 0.22, mix(0.16, 0.08, L));
-        float3 c = mix(float3(0.95, 0.45, 0.15), float3(0.85, 0.22, 0.10), hash11(floor(t * 0.1) + L));
-        float a = m * mix(0.7, 0.95, L);
-        return float4(c * a, a);
+        float m = fallingParticles(p + L * 4.1, t, mix(0.07, 0.12, L), mix(0.015, 0.025, L), 0.3, 0.18, 0.08 * dens);
+        float a = m * mix(0.6, 0.85, L);
+        return float4(float3(0.92, 0.50, 0.22) * a, a);
     }
     if (type < 3.5) {
-        float m = fallingParticles(p + L * 3.1, t * 0.6, mix(0.025, 0.07, L), mix(0.015, 0.035, L), 0.5, mix(0.14, 0.2, L), mix(0.55, 0.25, L));
-        float a = m * mix(0.55, 0.9, L);
+        float2 q = (p + L * 3.1) / mix(0.022, 0.045, L);
+        q.y += t * mix(0.5, 0.8, L);
+        q.x += sin(q.y * 0.35 + t * 0.4) * 0.3;
+        float2 cell = floor(q);
+        float h = hash21(cell);
+        float m = step(h, 0.35 * dens) * softDot(fract(q) - 0.5, (hash22(cell) - 0.5) * 0.5, mix(0.12, 0.2, L));
+        float a = m * mix(0.45, 0.75, L);
         return float4(float3(a), a);
     }
     if (type < 4.5) {
-        float m = floatingMotes(p + L * 5.0, t * 0.5, mix(0.07, 0.11, L), 0.015) * 1.8;
-        float a = sat(m) * 0.6;
-        return float4(float3(0.85, 1.0, 0.4) * m, a);
+        float m = floatingMotes(p + L * 5.0, t * 0.35, mix(0.09, 0.14, L), 0.01) * step(L, 0.5 + dens);
+        m *= amount;
+        return float4(float3(1.0, 0.92, 0.55) * m, sat(m) * 0.4);
     }
     if (type < 5.5) {
-        float m = floatingMotes(p * 1.3 + L * 9.0, t * 0.7, mix(0.05, 0.09, L), 0.05) * 1.6;
-        float2 q = p * mix(14.0, 8.0, L) + float2(0.0, -t * 0.05);
-        float2 cell = floor(q);
-        float2 f = fract(q) - 0.5 - (hash22(cell) - 0.5) * 0.6;
-        float tw = pow(0.5 + 0.5 * sin(t * 2.0 + hash21(cell) * 40.0), 6.0) * step(0.85, hash21(cell + 3.0));
-        float twinkleCross = (0.004 / (abs(f.x) + 0.004)) * (0.004 / (abs(f.y) + 0.004)) * 60.0 * (1.0 - smoothstep(0.0, 0.4, length(f)));
-        float3 c = float3(0.6, 0.85, 1.0) * m + float3(0.9, 0.95, 1.0) * twinkleCross * tw;
-        return float4(c, sat(m + twinkleCross * tw) * 0.5);
+        float m = floatingMotes(p * 1.2 + L * 9.0, t * 0.4, mix(0.07, 0.12, L), 0.03) * amount;
+        return float4(float3(0.70, 0.88, 1.0) * m, sat(m) * 0.4);
     }
     if (type < 6.5) {
-        float2 rq = float2(p.x * mix(70.0, 40.0, L) + p.y * 6.0, p.y * mix(4.0, 2.5, L) + t * mix(5.0, 8.0, L));
+        float2 rq = float2(p.x * mix(90.0, 55.0, L) + p.y * 4.0, p.y * mix(3.0, 2.0, L) + t * mix(3.5, 5.0, L));
         float rc = hash21(floor(rq) + L * 11.0);
-        float drop = step(0.9, rc) * (1.0 - smoothstep(0.0, 0.1, abs(fract(rq.x) - 0.5))) * fract(rq.y);
-        float a = drop * mix(0.25, 0.4, L);
-        return float4(float3(0.8, 0.85, 1.0) * a, a);
+        float drop = step(rc, 0.06 * dens) * (1.0 - smoothstep(0.0, 0.08, abs(fract(rq.x) - 0.5))) * smoothstep(0.0, 1.0, fract(rq.y));
+        float a = drop * mix(0.12, 0.2, L);
+        return float4(float3(0.85, 0.9, 1.0) * a, a);
     }
     if (L > 0.5) { return float4(0.0); }
-    float s = stars(p, 70.0, t) + stars(p + 5.0, 140.0, t * 1.3) * 0.6;
-    return float4(float3(s), sat(s) * 0.6);
+    float s = (stars(p, 80.0, t) * 0.7 + stars(p + 5.0, 150.0, t * 1.3) * 0.4) * amount;
+    s *= smoothstep(-0.1, 0.3, p.y);
+    return float4(float3(s), sat(s) * 0.5);
+}
+
+/// UV картинки, вписанной в прямоугольник экрана (fit) или заполняющей его (cover).
+/// Возвращает uv; inside — 1, если пиксель попал в саму картинку.
+float2 placeImage(float2 fc, float2 res, float2 img, float cover, float focusX) {
+    float s = cover > 0.5 ? max(res.x / img.x, res.y / img.y) : min(res.x / img.x, res.y / img.y);
+    float2 shown = img * s;
+    float2 offset = (res - shown) * 0.5;
+    if (cover > 0.5) {
+        // Сдвигаем кадр к персонажу, но не дальше края картинки.
+        float excess = shown.x - res.x;
+        offset.x = -clamp(focusX * shown.x - res.x * 0.5, 0.0, excess);
+    }
+    float2 local = (fc - offset) / shown;
+    return float2(local.x, 1.0 - local.y);
 }
 
 float3 imageScene(float2 fc, float2 res, float t, float2 img, float flags, float particles,
-                  float charScale, float3 glowCol, float focusX TEX_PARAMS) {
+                  float charScale, float3 glowCol, float focusX, float amount TEX_PARAMS) {
     float kenBurns = flagBit(flags, IMG_KEN_BURNS);
-    float floatOn = flagBit(flags, IMG_FLOAT);
     float rays = flagBit(flags, IMG_RAYS);
-    float hasCut = flagBit(flags, IMG_HAS_CUTOUT);
+    float separate = flagBit(flags, IMG_SEPARATE);
     float bgShader = flagBit(flags, IMG_BG_SHADER);
     float aura = flagBit(flags, IMG_AURA);
 
-    float2 su = fc / res;
+    // Очень медленный «вдох» камеры: приближение на 3% за минуту и обратно.
+    float zoom = 1.0 + kenBurns * 0.03 * (0.5 - 0.5 * cos(t * TAU / 60.0));
+    float2 zfc = (fc - 0.5 * res) / zoom + 0.5 * res;
     float2 p = centered(fc, res);
-    float bob = floatOn * 0.006 * sin(t * 0.7);
-    float breath = 1.0 + floatOn * 0.006 * sin(t * 0.9 + 1.0);
 
     float3 col;
     float2 charUV;
+    float charIn;
     if (bgShader > 0.5) {
-        // Фон — живая сцена; персонаж стоит внизу по центру.
-        col = SAMPLE_BG(float2(su.x, 1.0 - su.y), 0.0).rgb;
+        // Фон — живая сцена, персонаж стоит внизу по центру.
+        col = SAMPLE_BG(float2(fc.x / res.x, 1.0 - fc.y / res.y), 0.0).rgb;
         float hd = res.y * charScale;
         float wd = hd * img.x / img.y;
-        float2 anchor = float2(focusX * wd, 0.0);
-        float2 px = fc - float2(res.x * 0.5 - focusX * wd, bob * res.y);
-        px = anchor + (px - anchor) / breath;
+        float2 px = zfc - float2(res.x * 0.5 - focusX * wd, 0.0);
         charUV = float2(px.x / wd, 1.0 - px.y / hd);
+        charIn = 1.0;
     } else {
-        // Фон — сама картинка «по заполнению», с упором на персонажа по горизонтали.
-        float s = max(res.x / img.x, res.y / img.y);
-        float2 vis = res / (img * s);
-        float2 off = float2(clamp(focusX - vis.x * 0.5, 0.0, 1.0 - vis.x), (1.0 - vis.y) * 0.4);
-        float2 uv = off + float2(su.x, 1.0 - su.y) * vis;
-        float2 focus = float2(focusX, 0.45);
-        float z = 1.0 + kenBurns * (0.05 + 0.03 * sin(t * 0.05));
-        float2 pan = kenBurns * 0.01 * float2(sin(t * 0.031), cos(t * 0.023));
-        float2 bgUV = focus + (uv - focus) / z + pan;
-        col = SAMPLE_BG(bgUV, 0.0).rgb;
-        if (hasCut > 0.5) {
-            // Под персонажем — размытый фон: при сдвиге слоёв не будет двойного контура.
-            float m = SAMPLE_CUT(bgUV, 3.0).a;
-            col = mix(col, SAMPLE_BG(bgUV, 6.0).rgb, smoothstep(0.05, 0.5, m));
-        }
-        // Персонаж «ближе» к зрителю: двигается иначе, чем фон (параллакс).
-        float zc = 1.0 + (z - 1.0) * 0.5;
-        charUV = focus + (uv - focus) / (zc * breath) + pan * 0.4 + float2(0.0, bob);
+        // Авто: если пропорции близки к экрану — на весь экран, иначе картинка целиком.
+        float ratio = (img.x / img.y) / (res.x / res.y);
+        float autoCover = step(0.8, ratio) * step(ratio, 1.25);
+        float cover = flagBit(flags, IMG_FIT_FILL) + (1.0 - flagBit(flags, IMG_FIT_WHOLE)) * (1.0 - flagBit(flags, IMG_FIT_FILL)) * autoCover;
+        float2 uv = placeImage(zfc, res, img, cover, focusX);
+        float inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+
+        // Поля вокруг картинки: сама картинка, сильно размытая и притемнённая (как в iOS).
+        float2 fillUV = placeImage(zfc, res, img, 1.0, 0.5);
+        fillUV = (fillUV - 0.5) / 1.15 + 0.5;
+        float3 fill = SAMPLE_BG(fillUV, 7.0).rgb * 0.5 + SAMPLE_BG(fillUV, 5.0).rgb * 0.2;
+        // Мягкая тень от картинки на поля.
+        float2 d = max(max(-uv, uv - 1.0), float2(0.0)) * img / max(img.x, img.y);
+        fill *= 1.0 - 0.3 * exp(-length(d) * 25.0);
+
+        col = mix(fill, SAMPLE_BG(uv, 0.0).rgb, inside);
+        charUV = uv;
+        charIn = inside;
     }
 
-    float4 back = particleLayer(p, t, particles, 0.0);
-    col = col * (1.0 - back.a) + back.rgb;
+    float hasChar = max(separate, bgShader);
+    float4 back = particleLayer(p, t, particles, 0.0, amount);
+    float4 front = particleLayer(p, t, particles, 1.0, amount);
 
-    if (rays > 0.5) {
-        float2 src = float2(-0.6, 0.6);
-        float2 dir = p - src;
-        float ang = atan2(dir.y, dir.x);
-        float beam = fbm3(float2(ang * 7.0, t * 0.04)) * exp(-length(dir) * 1.1);
-        col += float3(1.0, 0.92, 0.75) * smoothstep(0.35, 0.8, beam) * 0.35;
-    }
-
-    if (hasCut > 0.5) {
-        float inside = step(0.0, charUV.x) * step(charUV.x, 1.0) * step(0.0, charUV.y) * step(charUV.y, 1.0);
-        float4 ch = SAMPLE_CUT(charUV, 0.0) * inside;
+    if (hasChar > 0.5) {
+        float inRect = step(0.0, charUV.x) * step(charUV.x, 1.0) * step(0.0, charUV.y) * step(charUV.y, 1.0) * charIn;
+        float4 ch = SAMPLE_CUT(charUV, 0.0) * inRect;
+        // Дальние частицы — за персонажем.
+        col = col * (1.0 - back.a) + back.rgb;
         if (aura > 0.5) {
-            float soft = SAMPLE_CUT(charUV, 4.0).a * inside;
-            float halo = max(soft - ch.a, 0.0);
-            col += glowCol * halo * (1.2 + 0.4 * sin(t * 1.3));
+            // Тонкий мягкий контровой свет по контуру.
+            float soft = SAMPLE_CUT(charUV, 2.5).a * inRect;
+            float rim = sat(soft - ch.a) * 2.0;
+            col += glowCol * rim * 0.35 * (0.85 + 0.15 * sin(t * 0.8));
         }
         col = col * (1.0 - ch.a) + ch.rgb;
+    } else {
+        col = col * (1.0 - back.a) + back.rgb;
     }
 
-    float4 front = particleLayer(p, t, particles, 1.0);
-    col = col * (1.0 - front.a) + front.rgb;
+    if (rays > 0.5) {
+        float2 src = float2(-0.5 * res.x / res.y, 0.55);
+        float2 dir = p - src;
+        float ang = atan2(dir.y, dir.x);
+        float beam = smoothstep(0.45, 0.75, fbm3(float2(ang * 5.0, t * 0.02)));
+        col += float3(1.0, 0.93, 0.80) * beam * exp(-length(dir) * 1.3) * 0.18;
+    }
 
-    col *= 1.0 - 0.22 * dot(p, p);
+    col = col * (1.0 - front.a) + front.rgb;
     return col;
 }

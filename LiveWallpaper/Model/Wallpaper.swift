@@ -117,7 +117,27 @@ enum AuraColor: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-/// «Живая картинка»: изображение пользователя, вырезанный с него персонаж и эффекты.
+/// Как картинка ложится на экран.
+enum ImageFit: String, Codable, CaseIterable, Identifiable {
+    /// На весь экран, если пропорции близки, иначе целиком.
+    case auto
+    /// Целиком, по краям — размытая копия картинки.
+    case whole
+    /// На весь экран с обрезкой.
+    case fill
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .auto: return "Авто"
+        case .whole: return "Целиком"
+        case .fill: return "На весь экран"
+        }
+    }
+}
+
+/// «Живая картинка»: изображение пользователя и аккуратные эффекты поверх.
 struct ImageScene: Codable, Hashable {
     /// Исходная картинка в папке Images библиотеки.
     var imageFile: String
@@ -125,15 +145,49 @@ struct ImageScene: Codable, Hashable {
     var cutoutFile: String?
     /// Горизонтальный центр персонажа на картинке (0…1) — по нему кадрируется экран.
     var focusX: Double = 0.5
-    /// nil — фон из самой картинки, иначе живая сцена.
+    var fit: ImageFit = .auto
+    /// nil — фон из самой картинки, иначе живая сцена (нужен вырезанный персонаж).
     var backgroundScene: ShaderKind?
-    var particles: ParticleEffect = .sparkles
-    var aura: AuraColor? = .magic
+    /// Частицы пролетают между персонажем и фоном (нужен вырезанный персонаж).
+    var separateCharacter = false
+    var particles: ParticleEffect = .none
+    /// Плотность частиц, 0…1.
+    var particleAmount = 0.6
+    /// Контровой свет по контуру персонажа.
+    var aura: AuraColor?
+    /// Очень медленное приближение камеры.
     var kenBurns = true
-    var floating = true
     var lightRays = false
     /// Высота персонажа относительно экрана, когда фон — живая сцена.
     var characterScale = 0.85
+
+    init(imageFile: String) {
+        self.imageFile = imageFile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case imageFile, cutoutFile, focusX, fit, backgroundScene, separateCharacter
+        case particles, particleAmount, aura, kenBurns, lightRays, characterScale
+    }
+
+    // Ручной декодер: недостающие поля берут спокойные значения по умолчанию
+    // (так же «перезапускаются» картинки, добавленные в первой версии).
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        imageFile = try c.decode(String.self, forKey: .imageFile)
+        cutoutFile = try c.decodeIfPresent(String.self, forKey: .cutoutFile)
+        focusX = try c.decodeIfPresent(Double.self, forKey: .focusX) ?? 0.5
+        let isFirstVersion = !c.contains(.fit)
+        fit = try c.decodeIfPresent(ImageFit.self, forKey: .fit) ?? .auto
+        backgroundScene = try c.decodeIfPresent(ShaderKind.self, forKey: .backgroundScene)
+        separateCharacter = try c.decodeIfPresent(Bool.self, forKey: .separateCharacter) ?? false
+        particles = isFirstVersion ? .none : (try c.decodeIfPresent(ParticleEffect.self, forKey: .particles) ?? .none)
+        particleAmount = try c.decodeIfPresent(Double.self, forKey: .particleAmount) ?? 0.6
+        aura = isFirstVersion ? nil : try c.decodeIfPresent(AuraColor.self, forKey: .aura)
+        kenBurns = try c.decodeIfPresent(Bool.self, forKey: .kenBurns) ?? true
+        lightRays = isFirstVersion ? false : (try c.decodeIfPresent(Bool.self, forKey: .lightRays) ?? false)
+        characterScale = try c.decodeIfPresent(Double.self, forKey: .characterScale) ?? 0.85
+    }
 }
 
 enum WallpaperSource: Codable, Hashable {

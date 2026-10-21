@@ -1,59 +1,74 @@
 import SwiftUI
 
-/// Настройки «живой картинки»: фон, частицы, свечение, движение.
+/// Настройки «живой картинки». По умолчанию всё спокойно: картинка как есть и медленное приближение.
 struct ImageSceneEditor: View {
     let item: WallpaperItem
     @EnvironmentObject private var library: WallpaperLibrary
 
     private var scene: ImageScene { item.imageScene ?? ImageScene(imageFile: "") }
     private var hasCutout: Bool { scene.cutoutFile != nil }
+    private var characterLayer: Bool { hasCutout && (scene.separateCharacter || scene.backgroundScene != nil) }
 
     var body: some View {
-        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
+        Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 10) {
             GridRow {
-                Picker("Фон", selection: binding(\.backgroundScene)) {
-                    Text("Сама картинка").tag(ShaderKind?.none)
-                    ForEach(ShaderCollection.allCases) { collection in
-                        Section(collection.title) {
-                            ForEach(ShaderKind.allCases.filter { $0.collection == collection }) { kind in
-                                Text(kind.title).tag(ShaderKind?.some(kind))
-                            }
-                        }
-                    }
+                Picker("Кадр", selection: binding(\.fit)) {
+                    ForEach(ImageFit.allCases) { Text($0.title).tag($0) }
                 }
-                .disabled(!hasCutout)
-                .help(hasCutout ? "Персонаж встанет поверх живой сцены" : "Нужен вырезанный персонаж")
-
-                Picker("Частицы", selection: binding(\.particles)) {
-                    ForEach(ParticleEffect.allCases) { Text($0.title).tag($0) }
-                }
-
-                Picker("Свечение", selection: binding(\.aura)) {
-                    Text("Без свечения").tag(AuraColor?.none)
-                    ForEach(AuraColor.allCases) { Text($0.title).tag(AuraColor?.some($0)) }
-                }
-                .disabled(!hasCutout)
-            }
-            GridRow {
-                Toggle("Плавное движение камеры", isOn: binding(\.kenBurns))
-                    .disabled(scene.backgroundScene != nil)
-                Toggle("Персонаж «дышит»", isOn: binding(\.floating))
-                    .disabled(!hasCutout)
+                .pickerStyle(.segmented)
+                .disabled(scene.backgroundScene != nil && hasCutout)
+                Toggle("Медленное приближение", isOn: binding(\.kenBurns))
                 Toggle("Лучи света", isOn: binding(\.lightRays))
             }
             GridRow {
-                LabeledContent("Центр персонажа") {
-                    Slider(value: binding(\.focusX), in: 0...1)
+                Picker("Частицы", selection: binding(\.particles)) {
+                    ForEach(ParticleEffect.allCases) { Text($0.title).tag($0) }
                 }
-                .help("По этой точке картинка кадрируется на экране и в Live Photo")
-                if scene.backgroundScene != nil {
-                    LabeledContent("Размер персонажа") {
-                        Slider(value: binding(\.characterScale), in: 0.3...1.3)
+                LabeledContent("Количество") {
+                    Slider(value: binding(\.particleAmount), in: 0.1...1)
+                }
+                .disabled(scene.particles == .none)
+                if scene.fit != .whole || scene.backgroundScene != nil {
+                    LabeledContent("Центр кадра") {
+                        Slider(value: binding(\.focusX), in: 0...1)
                     }
+                    .help("По этой точке картинка кадрируется на экране и в Live Photo")
+                } else {
+                    Color.clear.frame(height: 1)
                 }
             }
-            if !hasCutout {
-                Text("Персонажа вырезать не удалось — эффекты применяются ко всей картинке. Можно добавить PNG с прозрачным фоном.")
+
+            if hasCutout {
+                Divider().gridCellColumns(3)
+                GridRow {
+                    Toggle("Отделить персонажа от фона", isOn: binding(\.separateCharacter))
+                        .help("Частицы будут пролетать за персонажем — появится глубина")
+                    Picker("Свечение по контуру", selection: binding(\.aura)) {
+                        Text("Нет").tag(AuraColor?.none)
+                        ForEach(AuraColor.allCases) { Text($0.title).tag(AuraColor?.some($0)) }
+                    }
+                    .disabled(!characterLayer)
+                    Picker("Фон", selection: binding(\.backgroundScene)) {
+                        Text("Сама картинка").tag(ShaderKind?.none)
+                        ForEach(ShaderCollection.allCases) { collection in
+                            Section(collection.title) {
+                                ForEach(ShaderKind.allCases.filter { $0.collection == collection }) { kind in
+                                    Text(kind.title).tag(ShaderKind?.some(kind))
+                                }
+                            }
+                        }
+                    }
+                    .help("Персонаж встанет поверх живой сцены. Качество зависит от того, насколько чисто он вырезан.")
+                }
+                if scene.backgroundScene != nil {
+                    GridRow {
+                        LabeledContent("Размер персонажа") {
+                            Slider(value: binding(\.characterScale), in: 0.3...1.3)
+                        }
+                    }
+                }
+            } else {
+                Text("Персонаж не найден на картинке — эффекты применяются ко всей картинке целиком.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .gridCellColumns(3)

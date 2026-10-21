@@ -89,7 +89,7 @@ fragment float4 fragment_imageScene(VertexOut in [[stage_in]],
                                     sampler smp [[sampler(0)]]) {
     float2 fc = float2(in.position.x, u.resolution.y - in.position.y);
     float3 c = imageScene(fc, u.resolution, u.time, u.imageSize, u.flags, u.particles,
-                          u.characterScale, u.glow.rgb, u.extra.x TEX_ARGS);
+                          u.characterScale, u.glow.rgb, u.extra.x, u.extra.y TEX_ARGS);
     c += (hash21(fc + fract(u.time) * 100.0) - 0.5) / 255.0;
     return float4(c, 1.0);
 }

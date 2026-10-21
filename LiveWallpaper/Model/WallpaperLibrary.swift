@@ -106,6 +106,7 @@ final class WallpaperLibrary: ObservableObject {
                 // У картинки без фона своего фона нет — сразу ставим живую сцену.
                 if lifted.sourceWasTransparent {
                     scene.backgroundScene = .frierenFlowers
+                    scene.separateCharacter = true
                 }
             }
             let item = WallpaperItem(id: UUID(), name: url.deletingPathExtension().lastPathComponent,
