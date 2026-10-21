@@ -20,6 +20,7 @@
 		6FE70702EB7D22FA17183059 /* Playlist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40526BAEF3EE8E7594460E2C /* Playlist.swift */; };
 		71C0B517B83F8D4FF5E4CD6D /* WallpaperLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39925B682EC18BA1489B75E0 /* WallpaperLibrary.swift */; };
 		72ABE7BC9F94FD405248248D /* ShaderRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB995E7C1F86352180B70C9 /* ShaderRenderer.swift */; };
+		851284C421645499BDBF57D9 /* GreatWave.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F3A390308096A9FB94BFE88F /* GreatWave.jpg */; };
 		91D025D3BC49A0E0F8618861 /* Wallpaper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B6DE6411DACF19E4DFB603 /* Wallpaper.swift */; };
 		930A23D02489AFC733A62323 /* Snapshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89707728FE0CA30C9B03CC4E /* Snapshots.swift */; };
 		9F044C6C8A2A28FD35243723 /* PauseMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA10D9ACB0B88F66C8FAC1F6 /* PauseMonitor.swift */; };
@@ -69,6 +70,7 @@
 		D59687F127A3ADB15445FD21 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		D9029BAC5A8624C8BC043613 /* SubjectLifter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectLifter.swift; sourceTree = "<group>"; };
 		E599284A67142710CCBCA5A4 /* WallpaperContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperContentView.swift; sourceTree = "<group>"; };
+		F3A390308096A9FB94BFE88F /* GreatWave.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = GreatWave.jpg; sourceTree = "<group>"; };
 		FC00449B9C656BCA9B458D59 /* PlaylistsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -111,9 +113,18 @@
 				7EE4681D8A319258D241E593 /* LivePhoto */,
 				6D454112549C23C273BA5507 /* Model */,
 				DC5EB406252FD1D5181DF683 /* Rendering */,
+				95FCDAA7FF226925B744FE57 /* Resources */,
 				FE2678C5952E825FF286426D /* UI */,
 			);
 			path = LiveWallpaper;
+			sourceTree = "<group>";
+		};
+		95FCDAA7FF226925B744FE57 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F3A390308096A9FB94BFE88F /* GreatWave.jpg */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		9D155BCA298BC856DE299C17 = {
@@ -193,6 +204,7 @@
 			buildConfigurationList = 530509651E5F3491203E9AEE /* Build configuration list for PBXNativeTarget "LiveWallpaper" */;
 			buildPhases = (
 				E1150F7AF843868C6648074A /* Sources */,
+				2284FF7209B4772C7C6CC4EE /* Resources */,
 			);
 			buildRules = (
 			);
@@ -237,6 +249,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2284FF7209B4772C7C6CC4EE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				851284C421645499BDBF57D9 /* GreatWave.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		E1150F7AF843868C6648074A /* Sources */ = {

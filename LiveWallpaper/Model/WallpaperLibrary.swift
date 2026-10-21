@@ -224,9 +224,13 @@ final class WallpaperLibrary: ObservableObject {
     }
 
     private func load() {
-        if let data = try? Data(contentsOf: libraryFile),
-           let decoded = try? JSONDecoder().decode([WallpaperItem].self, from: data) {
-            items = decoded
+        if let data = try? Data(contentsOf: libraryFile) {
+            if let decoded = try? JSONDecoder().decode([WallpaperItem].self, from: data) {
+                items = decoded
+            } else {
+                // Не смогли прочитать — сохраняем копию, чтобы не потерять библиотеку при перезаписи.
+                try? data.write(to: libraryFile.appendingPathExtension("bak"), options: .atomic)
+            }
         }
         if let data = try? Data(contentsOf: playlistsFile),
            let decoded = try? JSONDecoder().decode([Playlist].self, from: data) {
@@ -236,7 +240,31 @@ final class WallpaperLibrary: ObservableObject {
         for kind in ShaderKind.allCases where !items.contains(where: { $0.shaderKind == kind }) {
             items.append(WallpaperItem(id: UUID(), name: kind.title, source: .shader(kind)))
         }
+        addBuiltInImages()
         save()
+    }
+
+    /// Встроенные живые картинки (общественное достояние). Добавляются один раз — если их удалить, не вернутся.
+    private func addBuiltInImages() {
+        let builtIns: [(resource: String, name: String)] = [
+            ("GreatWave", "Большая волна в Канагаве (Хокусай)"),
+        ]
+        let defaults = UserDefaults.standard
+        for builtIn in builtIns {
+            let key = "seeded-\(builtIn.resource)"
+            guard !defaults.bool(forKey: key),
+                  let source = Bundle.main.url(forResource: builtIn.resource, withExtension: "jpg") else { continue }
+            let file = "builtin-\(builtIn.resource).jpg"
+            let destination = imagesDirectory.appendingPathComponent(file)
+            if !FileManager.default.fileExists(atPath: destination.path) {
+                guard (try? FileManager.default.copyItem(at: source, to: destination)) != nil else { continue }
+            }
+            var scene = ImageScene(imageFile: file)
+            scene.fit = .fill
+            scene.focusX = 0.35
+            items.append(WallpaperItem(id: UUID(), name: builtIn.name, source: .image(scene)))
+            defaults.set(true, forKey: key)
+        }
     }
 
     private func save() {
