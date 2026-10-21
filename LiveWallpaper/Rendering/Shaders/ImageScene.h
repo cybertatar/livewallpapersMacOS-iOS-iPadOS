@@ -60,10 +60,18 @@ float4 particleLayer(float2 p, float t, float type, float layer, float amount) {
         return float4(float3(0.70, 0.88, 1.0) * m, sat(m) * 0.4);
     }
     if (type < 6.5) {
-        float2 rq = float2(p.x * mix(90.0, 55.0, L) + p.y * 4.0, p.y * mix(3.0, 2.0, L) + t * mix(3.5, 5.0, L));
-        float rc = hash21(floor(rq) + L * 11.0);
-        float drop = step(rc, 0.06 * dens) * (1.0 - smoothstep(0.0, 0.08, abs(fract(rq.x) - 0.5))) * smoothstep(0.0, 1.0, fract(rq.y));
-        float a = drop * mix(0.12, 0.2, L);
+        // Короткие наклонные капли: ячейки вытянуты по вертикали, в каждой — один короткий штрих.
+        float2 rp = float2(p.x + p.y * 0.12, p.y);
+        float2 q = rp / float2(mix(0.012, 0.02, L), mix(0.09, 0.14, L));
+        q.y += t * mix(9.0, 12.0, L);
+        float2 cell = floor(q);
+        float h = hash21(cell + L * 11.0);
+        float2 f = fract(q);
+        float x0 = 0.2 + 0.6 * hash11(h * 13.0);
+        float y0 = 0.15 + 0.5 * hash11(h * 7.0);
+        float streak = (1.0 - smoothstep(0.0, 0.12, abs(f.x - x0)))
+                     * smoothstep(y0, y0 + 0.05, f.y) * (1.0 - smoothstep(y0 + 0.2, y0 + 0.3, f.y));
+        float a = step(h, 0.25 * dens) * streak * mix(0.10, 0.16, L);
         return float4(float3(0.85, 0.9, 1.0) * a, a);
     }
     if (L > 0.5) { return float4(0.0); }
@@ -114,18 +122,23 @@ float3 imageScene(float2 fc, float2 res, float t, float2 img, float flags, float
     } else {
         // Авто: если пропорции близки к экрану — на весь экран, иначе картинка целиком.
         float ratio = (img.x / img.y) / (res.x / res.y);
-        float autoCover = step(0.8, ratio) * step(ratio, 1.25);
+        float autoCover = step(0.7, ratio) * step(ratio, 1.45);
         float cover = flagBit(flags, IMG_FIT_FILL) + (1.0 - flagBit(flags, IMG_FIT_WHOLE)) * (1.0 - flagBit(flags, IMG_FIT_FILL)) * autoCover;
         float2 uv = placeImage(zfc, res, img, cover, focusX);
         float inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
 
         // Поля вокруг картинки: сама картинка, сильно размытая и притемнённая (как в iOS).
         float2 fillUV = placeImage(zfc, res, img, 1.0, 0.5);
-        fillUV = (fillUV - 0.5) / 1.15 + 0.5;
-        float3 fill = SAMPLE_BG(fillUV, 7.0).rgb * 0.5 + SAMPLE_BG(fillUV, 5.0).rgb * 0.2;
-        // Мягкая тень от картинки на поля.
-        float2 d = max(max(-uv, uv - 1.0), float2(0.0)) * img / max(img.x, img.y);
-        fill *= 1.0 - 0.3 * exp(-length(d) * 25.0);
+        fillUV = (fillUV - 0.5) / 1.1 + 0.5;
+        // Гладкое размытие: несколько выборок с грубого мип-уровня вокруг точки.
+        float3 fill = float3(0.0);
+        for (int i = 0; i < 8; i++) {
+            float a = float(i) / 8.0 * TAU;
+            fill += SAMPLE_BG(fillUV + float2(cos(a), sin(a)) * 0.05, 6.0).rgb;
+        }
+        fill = (fill / 8.0) * 0.6 + SAMPLE_BG(fillUV, 7.5).rgb * 0.4;
+        float lum = dot(fill, float3(0.299, 0.587, 0.114));
+        fill = mix(float3(lum), fill, 0.8) * 0.72;
 
         col = mix(fill, SAMPLE_BG(uv, 0.0).rgb, inside);
         charUV = uv;
@@ -156,8 +169,9 @@ float3 imageScene(float2 fc, float2 res, float t, float2 img, float flags, float
         float2 src = float2(-0.5 * res.x / res.y, 0.55);
         float2 dir = p - src;
         float ang = atan2(dir.y, dir.x);
-        float beam = smoothstep(0.45, 0.75, fbm3(float2(ang * 5.0, t * 0.02)));
-        col += float3(1.0, 0.93, 0.80) * beam * exp(-length(dir) * 1.3) * 0.18;
+        float beam = smoothstep(0.4, 0.8, fbm3(float2(ang * 4.0, t * 0.015)));
+        float falloff = exp(-length(dir) * 1.6) * smoothstep(0.0, 0.25, length(dir));
+        col += float3(1.0, 0.94, 0.85) * beam * falloff * 0.08;
     }
 
     col = col * (1.0 - front.a) + front.rgb;
