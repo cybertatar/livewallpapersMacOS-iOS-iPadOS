@@ -44,8 +44,8 @@ final class VideoWallpaperView: WallpaperContentView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) не используется") }
 
-    override func layout() {
-        super.layout()
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         playerLayer.frame = bounds
@@ -98,8 +98,14 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) не используется") }
 
-    override func layout() {
-        super.layout()
+    // Размер drawable меняем вне layout(): изменение drawableSize само запускает layout MTKView.
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        updateDrawableSize()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
         updateDrawableSize()
     }
 
