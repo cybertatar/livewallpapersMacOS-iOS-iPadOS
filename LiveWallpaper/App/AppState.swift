@@ -22,6 +22,10 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Открытая вкладка главного окна и обои, выбранные для Live Photo.
+    @Published var mainTab: MainTab = .library
+    @Published var livePhotoSourceID: UUID?
+
     /// Ручная пауза из меню (не сохраняется между запусками).
     @Published var isManuallyPaused = false {
         didSet { desktop?.updatePause() }

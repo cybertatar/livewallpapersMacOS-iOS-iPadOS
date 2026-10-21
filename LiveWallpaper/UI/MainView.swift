@@ -1,34 +1,34 @@
 import SwiftUI
 
+enum MainTab: Hashable {
+    case library, playlists, autoChange, displays, livePhoto, settings
+}
+
 struct MainView: View {
     static let windowID = "main"
 
-    private enum Tab: Hashable {
-        case library, playlists, autoChange, displays, livePhoto, settings
-    }
-
-    @State private var tab: Tab = .library
+    @EnvironmentObject private var state: AppState
 
     var body: some View {
-        TabView(selection: $tab) {
+        TabView(selection: $state.mainTab) {
             LibraryView()
                 .tabItem { Label("Библиотека", systemImage: "square.grid.2x2") }
-                .tag(Tab.library)
+                .tag(MainTab.library)
             PlaylistsView()
                 .tabItem { Label("Подборки", systemImage: "rectangle.stack") }
-                .tag(Tab.playlists)
+                .tag(MainTab.playlists)
             AutoChangeView()
                 .tabItem { Label("Автосмена", systemImage: "shuffle") }
-                .tag(Tab.autoChange)
+                .tag(MainTab.autoChange)
             DisplaysView()
                 .tabItem { Label("Мониторы", systemImage: "display.2") }
-                .tag(Tab.displays)
+                .tag(MainTab.displays)
             LivePhotoView()
                 .tabItem { Label("Live Photo", systemImage: "livephoto") }
-                .tag(Tab.livePhoto)
+                .tag(MainTab.livePhoto)
             SettingsView()
                 .tabItem { Label("Настройки", systemImage: "gearshape") }
-                .tag(Tab.settings)
+                .tag(MainTab.settings)
         }
         .padding()
         .frame(minWidth: 860, minHeight: 560)

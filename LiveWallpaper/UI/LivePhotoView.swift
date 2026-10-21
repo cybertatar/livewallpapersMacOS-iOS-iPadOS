@@ -3,6 +3,7 @@ import AppKit
 import SwiftUI
 
 struct LivePhotoView: View {
+    @EnvironmentObject private var state: AppState
     @EnvironmentObject private var library: WallpaperLibrary
 
     private enum Status {
@@ -12,7 +13,6 @@ struct LivePhotoView: View {
         case failed(String)
     }
 
-    @State private var sourceID: UUID?
     @State private var preset: DevicePreset = .iPhoneProMax
     @State private var videoDuration = 0.0
     @State private var start = 0.0
@@ -23,6 +23,7 @@ struct LivePhotoView: View {
     @State private var preview: NSImage?
     @State private var status: Status = .idle
 
+    private var sourceID: UUID? { state.livePhotoSourceID }
     private var source: WallpaperItem? { library.item(id: sourceID) }
 
     private var isWorking: Bool {
@@ -40,10 +41,17 @@ struct LivePhotoView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Form {
                     Section {
-                        Picker("Источник", selection: $sourceID) {
+                        Picker("Источник", selection: $state.livePhotoSourceID) {
                             Text("Выберите обои").tag(UUID?.none)
-                            ForEach(library.items) { item in
-                                Text(item.name).tag(UUID?.some(item.id))
+                            ForEach([PlaylistRef.videos] + ShaderCollection.allCases.map { .collection($0) }, id: \.self) { ref in
+                                let items = library.items(in: ref)
+                                if !items.isEmpty {
+                                    Section(library.title(for: ref)) {
+                                        ForEach(items) { item in
+                                            Text(item.name).tag(UUID?.some(item.id))
+                                        }
+                                    }
+                                }
                             }
                         }
                         Picker("Устройство", selection: $preset) {

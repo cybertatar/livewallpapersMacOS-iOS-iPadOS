@@ -10,6 +10,7 @@ enum DevicePreset: String, CaseIterable, Identifiable {
     case iPhonePro = "iphone-63"
     case iPadPro13 = "ipad-13"
     case iPadPro11 = "ipad-11"
+    case compatible = "compatible-1080"
 
     var id: String { rawValue }
 
@@ -19,6 +20,7 @@ enum DevicePreset: String, CaseIterable, Identifiable {
         case .iPhonePro: return "iPhone 6,3″ (Pro)"
         case .iPadPro13: return "iPad Pro 13″"
         case .iPadPro11: return "iPad Pro 11″"
+        case .compatible: return "Совместимый 1080×1920"
         }
     }
 
@@ -29,6 +31,7 @@ enum DevicePreset: String, CaseIterable, Identifiable {
         case .iPhonePro: return CGSize(width: 1206, height: 2622)
         case .iPadPro13: return CGSize(width: 2064, height: 2752)
         case .iPadPro11: return CGSize(width: 1668, height: 2420)
+        case .compatible: return CGSize(width: 1080, height: 1920)
         }
     }
 }

@@ -114,6 +114,10 @@ struct LibraryView: View {
         .onTapGesture { selection = item.id }
         .contextMenu {
             Button("Поставить на все мониторы") { state.applyToAllDisplays(item) }
+            Button("Сделать Live Photo для iPhone/iPad") {
+                state.livePhotoSourceID = item.id
+                state.mainTab = .livePhoto
+            }
             Menu("Добавить в подборку") {
                 ForEach(library.playlists) { playlist in
                     Toggle(playlist.name, isOn: Binding(
