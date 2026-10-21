@@ -1,5 +1,21 @@
 import Foundation
 
+enum MotionMode: String, Codable, CaseIterable, Identifiable {
+    /// Анимация идёт всё время.
+    case continuous
+    /// Как у Apple: после разблокировки обои оживают и плавно застывают.
+    case settle
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .continuous: return "Постоянно"
+        case .settle: return "Как у Apple: оживают после разблокировки и застывают"
+        }
+    }
+}
+
 struct Preferences: Codable, Equatable {
     /// Показывать ли живые обои вообще.
     var enabled = true
@@ -19,6 +35,12 @@ struct Preferences: Codable, Equatable {
     /// Ставить кадр из живых обоев системными обоями (для Mission Control и экрана входа).
     var syncSystemWallpaper = true
 
+    var motionMode: MotionMode = .continuous
+    /// Сколько секунд обои идут с полной скоростью перед замедлением.
+    var settleDelay = 1.5
+    /// За сколько секунд анимация плавно останавливается.
+    var settleDuration = 5.0
+
     init() {}
 
     // Ручной декодер, чтобы новые поля не ломали уже сохранённые настройки.
@@ -34,6 +56,9 @@ struct Preferences: Codable, Equatable {
         frameRate = try c.decodeIfPresent(Int.self, forKey: .frameRate) ?? d.frameRate
         shaderScale = try c.decodeIfPresent(Double.self, forKey: .shaderScale) ?? d.shaderScale
         syncSystemWallpaper = try c.decodeIfPresent(Bool.self, forKey: .syncSystemWallpaper) ?? d.syncSystemWallpaper
+        motionMode = try c.decodeIfPresent(MotionMode.self, forKey: .motionMode) ?? d.motionMode
+        settleDelay = try c.decodeIfPresent(Double.self, forKey: .settleDelay) ?? d.settleDelay
+        settleDuration = try c.decodeIfPresent(Double.self, forKey: .settleDuration) ?? d.settleDuration
     }
 
     private static let defaultsKey = "preferences"

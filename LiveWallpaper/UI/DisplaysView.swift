@@ -32,6 +32,9 @@ struct DisplaysView: View {
                                     Text(item.name).tag(UUID?.some(item.id))
                                 }
                             }
+                            if let item = state.item(forDisplay: screen.id) {
+                                SpeedControl(item: item)
+                            }
                             Text(screen.details).font(.caption).foregroundStyle(.secondary)
                         }
                     }

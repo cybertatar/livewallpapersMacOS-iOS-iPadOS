@@ -11,6 +11,11 @@ struct RenderOptions: Equatable {
 class WallpaperContentView: NSView {
     func setPaused(_ paused: Bool) {}
     func apply(options: RenderOptions) {}
+    func setSpeed(_ speed: Double) {}
+    /// Множитель движения 0…1 для плавной остановки (0 — кадр застыл).
+    func setMotion(_ motion: Double) {}
+    /// Текущая позиция анимации: секунды видео или время шейдера.
+    var frameTime: Double { 0 }
 }
 
 // MARK: - Видео
@@ -19,11 +24,12 @@ final class VideoWallpaperView: WallpaperContentView {
     private let player = AVQueuePlayer()
     private let playerLayer = AVPlayerLayer()
     private var looper: AVPlayerLooper?
-    private let rate: Float
+    private var speed: Double
+    private var motion = 1.0
     private var isPaused = false
 
     init(url: URL, speed: Double) {
-        rate = Float(max(speed, 0.1))
+        self.speed = speed
         super.init(frame: .zero)
         wantsLayer = true
         layer?.backgroundColor = NSColor.black.cgColor
@@ -39,7 +45,7 @@ final class VideoWallpaperView: WallpaperContentView {
         playerLayer.frame = bounds
         layer?.addSublayer(playerLayer)
 
-        player.playImmediately(atRate: rate)
+        applyRate()
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) не используется") }
@@ -52,13 +58,35 @@ final class VideoWallpaperView: WallpaperContentView {
         CATransaction.commit()
     }
 
+    override var frameTime: Double {
+        let seconds = player.currentTime().seconds
+        return seconds.isFinite ? seconds : 0
+    }
+
     override func setPaused(_ paused: Bool) {
         guard paused != isPaused else { return }
         isPaused = paused
-        if paused {
-            player.pause()
-        } else {
+        applyRate()
+    }
+
+    override func setSpeed(_ speed: Double) {
+        self.speed = speed
+        applyRate()
+    }
+
+    override func setMotion(_ motion: Double) {
+        self.motion = motion
+        applyRate()
+    }
+
+    private func applyRate() {
+        let rate = isPaused ? 0 : Float(max(speed, 0.1) * motion)
+        if rate < 0.02 {
+            if player.rate != 0 { player.pause() }
+        } else if player.rate == 0 {
             player.playImmediately(atRate: rate)
+        } else {
+            player.rate = rate
         }
     }
 }
@@ -69,8 +97,10 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
     private let renderer: ShaderRenderer
     private let mtkView: MTKView
     private let kind: ShaderKind
-    private let speed: Double
+    private var speed: Double
     private var scale: Double
+    private var motion = 1.0
+    private var isPausedExternally = false
     private var elapsed: Double
     private var lastTimestamp: CFTimeInterval?
 
@@ -107,6 +137,7 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         updateDrawableSize()
+        redrawIfStopped()
     }
 
     override func viewDidChangeBackingProperties() {
@@ -121,13 +152,39 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
                           height: max(1, (bounds.height * factor).rounded()))
         if mtkView.drawableSize != size {
             mtkView.drawableSize = size
+            redrawIfStopped()
         }
     }
 
+    override var frameTime: Double { elapsed }
+
     override func setPaused(_ paused: Bool) {
-        guard mtkView.isPaused != paused else { return }
-        mtkView.isPaused = paused
-        if paused { lastTimestamp = nil }
+        isPausedExternally = paused
+        updateRunning()
+    }
+
+    override func setSpeed(_ speed: Double) {
+        self.speed = speed
+    }
+
+    override func setMotion(_ motion: Double) {
+        self.motion = motion
+        updateRunning()
+    }
+
+    private func updateRunning() {
+        let stopped = isPausedExternally || motion <= 0
+        guard mtkView.isPaused != stopped else { return }
+        mtkView.isPaused = stopped
+        lastTimestamp = nil
+        redrawIfStopped()
+    }
+
+    /// Остановленный MTKView ничего не рисует сам — дорисовываем текущий кадр вручную,
+    /// иначе при старте на паузе или после смены размера будет чёрный экран.
+    private func redrawIfStopped() {
+        guard mtkView.isPaused, window != nil else { return }
+        mtkView.draw()
     }
 
     override func apply(options: RenderOptions) {
@@ -139,11 +196,13 @@ final class ShaderWallpaperView: WallpaperContentView, MTKViewDelegate {
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
     func draw(in view: MTKView) {
-        let now = CACurrentMediaTime()
-        if let lastTimestamp {
-            elapsed += min(now - lastTimestamp, 0.25) * speed
+        if !view.isPaused {
+            let now = CACurrentMediaTime()
+            if let lastTimestamp {
+                elapsed += min(now - lastTimestamp, 0.25) * speed * motion
+            }
+            lastTimestamp = now
         }
-        lastTimestamp = now
 
         guard let pass = view.currentRenderPassDescriptor,
               let drawable = view.currentDrawable,

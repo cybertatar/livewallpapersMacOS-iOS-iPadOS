@@ -114,7 +114,6 @@ private struct ItemInspector: View {
     @EnvironmentObject private var state: AppState
     @EnvironmentObject private var library: WallpaperLibrary
     @State private var name = ""
-    @State private var speed = 1.0
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
@@ -123,14 +122,8 @@ private struct ItemInspector: View {
                 .frame(maxWidth: 220)
                 .onSubmit(save)
 
-            HStack {
-                Text("Скорость")
-                Slider(value: $speed, in: 0.25...3, step: 0.25, onEditingChanged: { editing in
-                    if !editing { save() }
-                })
-                .frame(width: 160)
-                Text(String(format: "×%.2g", speed)).monospacedDigit().frame(width: 40)
-            }
+            SpeedControl(item: item)
+                .frame(width: 280)
 
             Spacer()
 
@@ -153,13 +146,12 @@ private struct ItemInspector: View {
 
     private func syncFromItem() {
         name = item.name
-        speed = item.speed
     }
 
     private func save() {
+        guard !name.isEmpty, name != item.name else { return }
         var updated = item
-        updated.name = name.isEmpty ? item.name : name
-        updated.speed = speed
-        if updated != item { library.update(updated) }
+        updated.name = name
+        library.update(updated)
     }
 }

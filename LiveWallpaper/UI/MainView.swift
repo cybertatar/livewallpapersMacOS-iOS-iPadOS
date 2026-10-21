@@ -48,8 +48,29 @@ struct ThumbnailView: View {
         }
         .aspectRatio(16 / 9, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .task(id: item) {
+        .task(id: item.id) {
             image = await Snapshots.thumbnail(for: item, videoURL: library.fileURL(for: item))
         }
+    }
+}
+
+/// Скорость анимации обоев; применяется сразу, без перезапуска.
+struct SpeedControl: View {
+    let item: WallpaperItem
+    @EnvironmentObject private var state: AppState
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "tortoise").foregroundStyle(.secondary)
+            Slider(value: Binding(
+                get: { item.speed },
+                set: { state.setSpeed(($0 * 20).rounded() / 20, for: item) }
+            ), in: 0.1...3)
+            Image(systemName: "hare").foregroundStyle(.secondary)
+            Text(String(format: "×%.2f", item.speed))
+                .monospacedDigit()
+                .frame(width: 48, alignment: .trailing)
+        }
+        .help("Скорость анимации")
     }
 }

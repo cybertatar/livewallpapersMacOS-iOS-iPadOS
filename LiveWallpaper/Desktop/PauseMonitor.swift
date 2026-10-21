@@ -5,6 +5,10 @@ import IOKit.ps
 @MainActor
 final class PauseMonitor: NSObject {
     var onChange: (() -> Void)?
+    /// Экран заблокирован, уснул или сессия неактивна (обои не видны пользователю).
+    var onBlock: (() -> Void)?
+    /// Пользователь снова видит рабочий стол: разблокировал экран или разбудил дисплей.
+    var onUnblock: (() -> Void)?
 
     private(set) var isOnBattery = false
     private(set) var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
@@ -45,8 +49,10 @@ final class PauseMonitor: NSObject {
         self.timer = timer
     }
 
+    var isBlocked: Bool { isScreenAsleep || isSessionInactive || isLocked }
+
     func shouldPause(_ prefs: Preferences) -> Bool {
-        if isScreenAsleep || isSessionInactive || isLocked { return true }
+        if isBlocked { return true }
         if prefs.pauseOnBattery && isOnBattery { return true }
         if prefs.pauseOnLowPower && isLowPowerMode { return true }
         return false
@@ -61,8 +67,11 @@ final class PauseMonitor: NSObject {
     }
 
     private func update(_ change: () -> Void) {
+        let wasBlocked = isBlocked
         change()
+        if !wasBlocked && isBlocked { onBlock?() }
         onChange?()
+        if wasBlocked && !isBlocked { onUnblock?() }
     }
 
     @objc private func screensDidSleep() { update { isScreenAsleep = true } }

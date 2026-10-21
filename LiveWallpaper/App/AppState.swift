@@ -1,5 +1,5 @@
+import AppKit
 import Combine
-import Foundation
 import ServiceManagement
 
 @MainActor
@@ -29,6 +29,8 @@ final class AppState: ObservableObject {
         preferences = Preferences.load()
         desktop = DesktopController(state: self)
         pauseMonitor.onChange = { [weak self] in self?.desktop.updatePause() }
+        pauseMonitor.onBlock = { [weak self] in self?.desktop.freezeForLock() }
+        pauseMonitor.onUnblock = { [weak self] in self?.desktop.reanimate() }
         // Изменения в библиотеке (удаление, смена скорости) сразу применяются к обоям.
         library.objectWillChange
             .receive(on: RunLoop.main)
@@ -59,6 +61,34 @@ final class AppState: ObservableObject {
 
     func assign(_ itemID: UUID?, toDisplay uuid: String) {
         preferences.assignments[uuid] = itemID
+    }
+
+    // MARK: - Скорость
+
+    /// Обои, которые сейчас показаны хотя бы на одном мониторе.
+    var visibleItems: [WallpaperItem] {
+        var seen = Set<UUID>()
+        return NSScreen.screens
+            .compactMap { $0.displayUUID.flatMap(item(forDisplay:)) }
+            .filter { seen.insert($0.id).inserted }
+    }
+
+    /// Скорость обоев на экране (если на мониторах разные обои — у первых).
+    var visibleSpeed: Double { visibleItems.first?.speed ?? 1 }
+
+    func setSpeed(_ speed: Double, for item: WallpaperItem) {
+        guard let current = library.item(id: item.id), current.speed != speed else { return }
+        var updated = current
+        updated.speed = speed
+        library.update(updated)
+    }
+
+    func setVisibleSpeed(_ speed: Double) {
+        visibleItems.forEach { setSpeed(speed, for: $0) }
+    }
+
+    func reanimate() {
+        desktop.reanimate()
     }
 
     // MARK: - Автозапуск

@@ -19,6 +19,34 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Движение") {
+                Picker("Режим", selection: $state.preferences.motionMode) {
+                    ForEach(MotionMode.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.radioGroup)
+
+                if state.preferences.motionMode == .settle {
+                    LabeledContent("Полная скорость") {
+                        settleSlider(value: $state.preferences.settleDelay, range: 0...5)
+                    }
+                    LabeledContent("Замедление до остановки") {
+                        settleSlider(value: $state.preferences.settleDuration, range: 1...15)
+                    }
+                    HStack {
+                        Button("Оживить сейчас") { state.reanimate() }
+                        Spacer()
+                    }
+                    Text("""
+                    После разблокировки или пробуждения обои оживают, затем плавно застывают. \
+                    Если включено «Ставить кадр системными обоями», застывший кадр становится системными обоями, поэтому его же видно на экране блокировки, \
+                    и после разблокировки движение продолжается с него. Сама анимация на экране блокировки \
+                    невозможна: macOS не даёт сторонним приложениям рисовать поверх него.
+                    """)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+
             Section("Пауза анимации") {
                 Toggle("При работе от батареи", isOn: $state.preferences.pauseOnBattery)
                 Toggle("В режиме энергосбережения", isOn: $state.preferences.pauseOnLowPower)
@@ -58,5 +86,15 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    private func settleSlider(value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+        HStack {
+            Slider(value: value, in: range, step: 0.5)
+                .frame(width: 180)
+            Text(String(format: "%.1f с", value.wrappedValue))
+                .monospacedDigit()
+                .frame(width: 44, alignment: .trailing)
+        }
     }
 }

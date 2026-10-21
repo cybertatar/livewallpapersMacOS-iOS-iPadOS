@@ -34,21 +34,27 @@ final class WallpaperWindow: NSWindow {
         onVisibilityChange?()
     }
 
-    /// Показывает обои. Пересоздаёт содержимое только если сами обои поменялись.
-    func show(item: WallpaperItem?, videoURL: URL?, options: RenderOptions) {
-        if item == self.item, content != nil {
+    /// Показывает обои. Пересоздаёт содержимое только если сменились сами обои
+    /// (скорость и название применяются на лету). Возвращает true, если содержимое пересоздано.
+    @discardableResult
+    func show(item: WallpaperItem?, videoURL: URL?, options: RenderOptions) -> Bool {
+        if let content, item?.id == self.item?.id, item?.source == self.item?.source {
             if options != self.options {
-                content?.apply(options: options)
+                content.apply(options: options)
                 self.options = options
             }
-            return
+            if let item, item.speed != self.item?.speed {
+                content.setSpeed(item.speed)
+            }
+            self.item = item
+            return false
         }
         content?.removeFromSuperview()
         content = nil
         self.item = item
         self.options = options
 
-        guard let item, let contentView else { return }
+        guard let item, let contentView else { return true }
         let view: WallpaperContentView?
         switch item.source {
         case .video:
@@ -60,16 +66,23 @@ final class WallpaperWindow: NSWindow {
         case .shader(let kind):
             view = ShaderWallpaperView(kind: kind, speed: item.speed, options: options)
         }
-        guard let view else { return }
+        guard let view else { return true }
         view.frame = contentView.bounds
         view.autoresizingMask = [.width, .height]
         contentView.addSubview(view)
         content = view
+        return true
     }
 
     func setPaused(_ paused: Bool) {
         content?.setPaused(paused)
     }
+
+    func setMotion(_ motion: Double) {
+        content?.setMotion(motion)
+    }
+
+    var frameTime: Double? { content?.frameTime }
 
     func tearDown() {
         NotificationCenter.default.removeObserver(self)
