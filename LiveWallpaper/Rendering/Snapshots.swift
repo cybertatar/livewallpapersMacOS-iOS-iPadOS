@@ -8,6 +8,7 @@ enum Snapshots {
     private static let cache = NSCache<NSString, NSImage>()
     private static let ciContext = CIContext()
 
+    @MainActor
     static func thumbnail(for item: WallpaperItem, videoURL: URL?) async -> NSImage? {
         let key = "\(item.id.uuidString)-\(item.speed)" as NSString
         if let cached = cache.object(forKey: key) { return cached }
