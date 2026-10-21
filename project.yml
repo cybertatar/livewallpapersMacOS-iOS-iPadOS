@@ -1,0 +1,36 @@
+# Xcode-проект генерируется из этого файла: `xcodegen generate`
+name: LiveWallpaper
+options:
+  bundleIdPrefix: com.cybertatar
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  LiveWallpaper:
+    type: application
+    platform: macOS
+    sources:
+      - path: LiveWallpaper
+        excludes:
+          - "Info.plist"
+          - "LiveWallpaper.entitlements"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cybertatar.LiveWallpaper
+        PRODUCT_NAME: LiveWallpaper
+        INFOPLIST_FILE: LiveWallpaper/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: LiveWallpaper/LiveWallpaper.entitlements
+        # Подпись "Sign to Run Locally" — собирается без аккаунта разработчика.
+        # Можно поменять на свой Personal Team в Xcode → Signing & Capabilities.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: NO
+        ENABLE_APP_SANDBOX: NO
+        COMBINE_HIDPI_IMAGES: YES
